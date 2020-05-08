@@ -1,0 +1,21 @@
+IC86:
+pre_cal:
+	triggersplitter
+	triggercheck
+	launchcleaning
+	seededrtcleaning
+cal:
+	lccleaning
+	launchcleaning
+	wavecalibrator
+	waveformsplitter
+ehe_filter:
+	portiasplitter
+	portia
+	portiaeventomkeyconverter
+	I3FilterModule
+
+IC79:
+pre_cal:
+	rename
+	
