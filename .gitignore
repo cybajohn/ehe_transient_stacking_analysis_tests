@@ -1,7 +1,8 @@
 jobfiles*
 out*
 plots*
-filtertest*
+filtertest/*
+plot_stash/*
 doc/inc
 
 # personal paths
