@@ -34,7 +34,7 @@ import sys
 #sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 
-from tray_scripts import MyEHEFilter_IC86_2012, which_split, ehe_collector, EHEAlertFilter
+from my_modules import MyEHEFilter_IC86_2012, which_split, ehe_collector, EHEAlertFilter
 
 
 
