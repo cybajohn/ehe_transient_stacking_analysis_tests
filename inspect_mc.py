@@ -1,3 +1,7 @@
+"""
+script to inspect and plot mc data
+"""
+
 import numpy as np
 from tdepps.utils import fit_spl_to_hist, make_equdist_bins
 from matplotlib import pyplot as plt
@@ -11,7 +15,7 @@ import _loader
 
 import sys
 
-sys.path.append("../")
+#sys.path.append("../")
 
 
 from my_modules import plot_weighted_hist_mc_no_ehe, plot_weights, load_sources, load_mc_data, plot_energy_dec_hist
