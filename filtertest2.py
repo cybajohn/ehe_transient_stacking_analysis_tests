@@ -117,15 +117,15 @@ tray.AddModule(test_run_alert_filter,
 tray.AddSegment(EHEAlertFilter,
 		If = which_split(split_name='InIceSplit')
 		)
-
+"""
 tray.AddModule(CheckFilter,
 		filter_key = "EHEFilter_11",
 		test_key = "MyEHEFilter",
 		outfilename = outfile + "/FilterCheckPerModule",
 		If = which_split(split_name='InIceSplit')
 		)
-
-tray.AddModule(HighQFilter, "my_HighQFilter",
+"""
+tray.AddSegment(HighQFilter, "my_HighQFilter",
 		If = which_split(split_name='InIceSplit')
 		)
 
