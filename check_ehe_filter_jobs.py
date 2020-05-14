@@ -188,6 +188,7 @@ if __name__ == "__main__":
     outpath_1 = os.path.join(PATHS.data, "check_{}_mc_ids".format(source_type))
     outpath_2 = os.path.join(PATHS.data, "check_my_{}_mc_ids".format(source_type))
     outpath_3 = os.path.join(PATHS.data, "check_{}_alert_mc_ids".format(source_type))
+    outpath_4 = os.path.join(PATHS.data, "check_{}_high_q_mc_ids".format(source_type))
     if os.path.isdir(outpath_1):
         print("")
         warnings.warn("Output folder '{}' is already ".format(outpath_1) +
@@ -197,13 +198,15 @@ if __name__ == "__main__":
         os.makedirs(outpath_1)
 	os.makedirs(outpath_2)
 	os.makedirs(outpath_3)
+	os.makedirs(outpath_4)
 
     # Prepare job files by splitting arg list to jobfiles
     file_list = []
     gcd_list = []
     out_list_1 = []
     out_list_2 = []
-    out_list_3 = [] 
+    out_list_3 = []
+    out_list_4 = []
     print("")
     for num in data.keys():
         # Combine all files for the current sample
@@ -240,7 +243,7 @@ if __name__ == "__main__":
         out_list_1.append([os.path.join(outpath_1, pi) for pi in outp])
 	out_list_2.append([os.path.join(outpath_2, pi) for pi in outp])
 	out_list_3.append([os.path.join(outpath_3, pi) for pi in outp])
-
+	out_list_4.append([os.path.join(outpath_4, pi) for pi in outp])
 
     # Compress and write job files
     in_files = []
@@ -253,12 +256,14 @@ if __name__ == "__main__":
     map(out_paths_2.extend, out_list_2)
     out_paths_3 = []
     map(out_paths_3.extend, out_list_3)
+    out_paths_4 = []
+    map(out_paths_4.extend, out_list_4)
 
 
     assert len(in_files) == len(out_paths_1) == len(gcd_files)
     print("\nTotal number of jobs: ", len(out_paths_1), "\n")
 
-    job_args = {"infiles": in_files, "gcdfile": gcd_files, "outfile_1": out_paths_1, "outfile_2": out_paths_2, "outfile_3": out_paths_3}
+    job_args = {"infiles": in_files, "gcdfile": gcd_files, "outfile_1": out_paths_1, "outfile_2": out_paths_2, "outfile_3": out_paths_3, "outfile_4": out_paths_4}
 
     exe = [
         os.path.join("/home", "jkollek", "software", "build",
