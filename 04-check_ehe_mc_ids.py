@@ -34,7 +34,7 @@ import sys
 #sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 
-from my_modules import MyEHEFilter_IC86_2012, which_split, ehe_collector, EHEAlertFilter
+from my_modules import MyEHEFilter_IC86_2012, which_split, ehe_collector, EHEAlertFilter, HighQFilter
 
 
 
@@ -92,7 +92,7 @@ class hese_collector(icetray.I3ConditionalModule):
 
 
 
-def main(in_files, out_file_1, out_file_2, out_file_3, gcd_file, source_type):
+def main(in_files, out_file_1, out_file_2, out_file_3, out_file_4, gcd_file, source_type):
     files = []
     files.append(gcd_file)
     if not isinstance(in_files, list):
@@ -155,6 +155,10 @@ def main(in_files, out_file_1, out_file_2, out_file_3, gcd_file, source_type):
 			If = which_split(split_name='InIceSplit')
 			)
 	
+	tray.AddSegment(HighQFilter, "my_HighQFilter",
+                	If = which_split(split_name='InIceSplit')
+                	)
+	
 	# Create correct MCPrimary for energy
 	tray.AddModule(weighting.get_weighted_primary, "weighted_primary",
         	        If=lambda frame: not frame.Has("MCPrimary"))
@@ -164,6 +168,7 @@ def main(in_files, out_file_1, out_file_2, out_file_3, gcd_file, source_type):
 			outfilename = out_file_1,
 			outfilename2 = out_file_2,
 			outfilename3 = out_file_3,
+			outfilename4 = out_file_4,
 			If = which_split(split_name='InIceSplit') # returns empty dicts, cause no InIceSplits yet
 			)
     
@@ -184,6 +189,7 @@ if __name__ == "__main__":
     parser.add_argument("--outfile_1", type=str)
     parser.add_argument("--outfile_2", type=str)
     parser.add_argument("--outfile_3", type=str)
+    parser.add_argument("--outfile_4", type=str)
 
     args = parser.parse_args()
 
@@ -192,8 +198,9 @@ if __name__ == "__main__":
     out_file_1 = args.outfile_1
     out_file_2 = args.outfile_2
     out_file_3 = args.outfile_3
+    out_file_4 = args.outfile_4
     
     source_type = "ehe" # "ehe" or "hese"
     
-    main(in_files, out_file_1, out_file_2, out_file_3, gcd_file, source_type)
+    main(in_files, out_file_1, out_file_2, out_file_3, out_file_4, gcd_file, source_type)
                                            
