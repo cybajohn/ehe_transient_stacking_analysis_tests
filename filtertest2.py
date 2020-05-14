@@ -27,6 +27,7 @@ import sys
 from my_modules import MyEHEFilter, MyPreCalibration, MyEHECalibration, MyPreCalibration_IC86_2012, MyEHECalibration_IC86_2012, MyEHEFilter_IC86_2012, which_split, ehe_collector, EHEAlertFilter
 from my_modules import push_test, push_test2, RunEHEAlertFilter, test_run_alert_filter, CheckFilter
 
+from my_modules import HighQFilter
 
 ###### functions to inspect frames or other things
 
@@ -124,9 +125,12 @@ tray.AddModule(CheckFilter,
 		If = which_split(split_name='InIceSplit')
 		)
 
+tray.AddModule(HighQFilter, "my_HighQFilter",
+		If = which_split(split_name='InIceSplit')
+		)
+
 tray.AddModule(weighting.get_weighted_primary, "weighted_primary",
                    If=lambda frame: not frame.Has("MCPrimary"))
-
 
 
 tray.AddModule(ehe_collector,"collector",
@@ -140,10 +144,10 @@ tray.AddModule(ehe_collector,"collector",
 
 if file_type == "IC79":
 	tray.AddModule('I3Writer', 'writer',
-			Filename='filtertest/filtertest_2.i3.bz2')
+			Filename='filtertest/filtertest_79.i3.bz2')
 if file_type == "IC86_2012":
 	tray.AddModule('I3Writer', 'writer',
-			Filename='filtertest/filtertest2.i3.bz2')
+			Filename='filtertest/filtertest_2012.i3.bz2')
 
 if file_type == "IC86_2011":
 	tray.AddModule('I3Writer', 'writer',
