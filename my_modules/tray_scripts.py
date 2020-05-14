@@ -949,37 +949,38 @@ def MyEHEFilter(tray, name, If=lambda f:True, CalIf=lambda f:True, PreIf=lambda 
 ## copied and modified from https://code.icecube.wisc.edu/projects/icecube/browser/IceCube/projects/filterscripts/trunk/python/highqfilter.py
 # High Charge Filter Traysegment - 2017/Pass2
 @icetray.traysegment
-def HighQFilter(tray,name, pulses='RecoPulses',If = lambda f: True):
-    """
-    Traysegment for a high charge filter (formerly EHE).
-    """   
-    # load needed libs, the "False" suppresses any "Loading..." messages
-    from icecube.filterscripts import filter_globals
-    icetray.load("filterscripts",False)
+def HighQFilter(tray, name, pulses='SplitInIcePulses', If=lambda f: True, PreIf=lambda f: True):
+    	"""
+    	Traysegment for a high charge filter (formerly EHE).
+    	"""   
+    	# load needed libs, the "False" suppresses any "Loading..." messages
+    	#from icecube.filterscripts import filter_globals
+    	#icetray.load("filterscripts",False) 
+    	from icecube import VHESelfVeto
+
+	
+    	HighQFilter_threshold = 1000.0 #from the website
    
-    from icecube import VHESelfVeto
-    HighQFilter_threshold = 1000.0
+    	TriggerEvalList = ["InIceSMTTriggered"] # work on SMT8 triggers
+    	def If_with_triggers(frame):
+        	if not If(frame):
+            		return False
+        	for trigger in TriggerEvalList:
+            		if frame[trigger].value:
+                		return True
+        	return False
    
-    TriggerEvalList = [filter_globals.inicesmttriggered] # work on SMT8 triggers
-    def If_with_triggers(frame):
-        if not If(frame):
-            return False
-        for trigger in TriggerEvalList:
-            if frame[trigger].value:
-                return True
-        return False
-   
-    # apply the veto
-    tray.AddModule('HomogenizedQTot', name+'_qtot_total',
-        Pulses=pulses,
-        Output=filter_globals.homogenized_qtot,
-        If = If_with_triggers)
-    tray.AddModule("I3FilterModule<I3HighQFilter_17>",
-                   name+"HighQFilter",
-                   MinimumCharge = HighQFilter_threshold,
-                   ChargeName = filter_globals.homogenized_qtot,
-                   TriggerEvalList = TriggerEvalList,
-                   DecisionName = filter_globals.HighQFilter,
-                   If = If)
+   	# apply the veto
+    	tray.AddModule('HomogenizedQTot', name+'_qtot_total',
+        		Pulses=pulses,
+        		Output='HESE_CausalQTot',
+        		If = If_with_triggers)
+    	tray.AddModule("I3FilterModule<I3HighQFilter_17>",
+                   	name+"HighQFilter",
+                   	MinimumCharge = HighQFilter_threshold,
+                   	ChargeName = 'HESE_CausalQTot',
+                   	TriggerEvalList = TriggerEvalList,
+                   	DecisionName = "HighQFilter",
+                   	If = If)
 
 
