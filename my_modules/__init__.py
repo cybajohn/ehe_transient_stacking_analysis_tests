@@ -7,3 +7,4 @@ from .tray_scripts import MyPreCalibration_IC86_2012, MyEHECalibration_IC86_2012
 from .tray_scripts import EHEAlertFilter
 from .tray_scripts import which_split, push_test, push_test2, RunEHEAlertFilter, test_run_alert_filter, CheckFilter
 from .tray_scripts import ehe_collector
+from .tray_scripts import HighQFilter
