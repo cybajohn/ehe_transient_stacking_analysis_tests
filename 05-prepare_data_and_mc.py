@@ -138,8 +138,8 @@ def split_data_on_off(ev_t, src_dicts, dt0, dt1):
 
 source_type = "ehe" # "hese" or "ehe"
 
-path_names = ["mc_no_{}".format(source_type), "my_mc_no_{}".format(source_type), "mc_no_{}_alert".format(source_type), "mc_{}_alert".format(source_type)]
-local_names = ["check_{}_mc_ids".format(source_type), "check_my_{}_mc_ids".format(source_type), "check_{}_alert_mc_ids".format(source_type)]
+path_names = ["mc_no_{}".format(source_type), "my_mc_no_{}".format(source_type), "mc_no_{}_alert".format(source_type), "mc_{}_alert".format(source_type), "mc_no_{}_high_q".format(source_type)]
+local_names = ["check_{}_mc_ids".format(source_type), "check_my_{}_mc_ids".format(source_type), "check_{}_alert_mc_ids".format(source_type), "check_{}_high_q_mc_ids".format(source_type)]
 
 off_data_outpath = os.path.join(PATHS.data, "data_offtime")
 on_data_outpath = os.path.join(PATHS.data, "data_ontime")
@@ -151,7 +151,7 @@ for item in path_names:
 
 mc_unfiltered_outpath = os.path.join(PATHS.data, "mc_unfiltered")
 out_paths = {"off": off_data_outpath, "on": on_data_outpath, "mc_1": mc_outpaths[0], "mc_2": mc_outpaths[1], "mc_3": mc_outpaths[2],
-		"mc_unfiltered": mc_unfiltered_outpath, "mc_4": mc_outpaths[3]}
+		"mc_unfiltered": mc_unfiltered_outpath, "mc_4": mc_outpaths[3], "mc_5": mc_outpaths[4]}
 for _p in out_paths.values():
     if not os.path.isdir(_p):
         os.makedirs(_p)
@@ -237,7 +237,8 @@ for name in all_sample_names:
 
     # Save, also in npy format
     print("  Saving on, off and non-EHE like MCs at:")
-    out_arrs = {"off": exp[is_offtime], "on": exp_on, "mc_1": mc[~is_ehe_like[0]], "mc_2": mc[~is_ehe_like[1]], "mc_3": mc[~is_ehe_like[2]], "mc_unfiltered": mc, "mc_4": mc[is_ehe_like[2]]}
+    out_arrs = {"off": exp[is_offtime], "on": exp_on, "mc_1": mc[~is_ehe_like[0]], "mc_2": mc[~is_ehe_like[1]], "mc_3": mc[~is_ehe_like[2]],
+                 "mc_unfiltered": mc, "mc_4": mc[is_ehe_like[2]], "mc_5": mc[~is_ehe_like[3]]}
     for data_name in out_paths.keys():
         _fname = os.path.join(out_paths[data_name], name + ".npy")
         np.save(file=_fname, arr=out_arrs[data_name])
