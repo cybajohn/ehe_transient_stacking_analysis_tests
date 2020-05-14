@@ -29,7 +29,7 @@ source_type = "ehe"
 inpath = os.path.join(PATHS.data, "check_{}_mc_ids".format(source_type))
 outpath = os.path.join(PATHS.local, "check_{}_mc_ids".format(source_type))
 
-path_names = ["check_{}_mc_ids".format(source_type), "check_my_{}_mc_ids".format(source_type), "check_{}_alert_mc_ids".format(source_type)]
+path_names = ["check_{}_mc_ids".format(source_type), "check_my_{}_mc_ids".format(source_type), "check_{}_alert_mc_ids".format(source_type), "check_{}_high_q_mc_ids".format(source_type)]
 
 
 for item in path_names:
