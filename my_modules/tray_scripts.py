@@ -214,11 +214,13 @@ class ehe_collector(icetray.I3ConditionalModule):
                 self.AddParameter("outfilename","outfilename","")
 		self.AddParameter("outfilename2","outfilename2","")
 		self.AddParameter("outfilename3","outfilename3","")
+		self.AddParameter("outfilename4","outfilename4","")
 
         def Configure(self):
                 self.outfile = self.GetParameter("outfilename")
 		self.second_outfile = self.GetParameter("outfilename2")
 		self.alert_outfile = self.GetParameter("outfilename3")
+		self.high_q_outfile = self.GetParameter("outfilename4")
                 self.run_id = []
                 self.event_id = []
                 # extra stuff Torben saved
@@ -233,6 +235,11 @@ class ehe_collector(icetray.I3ConditionalModule):
 		self.alert_run_id = []
 		self.alert_event_id = []
 		self.alert_energy = []
+		
+		# high_q_filter
+		self.high_q_run_id = []
+		self.high_q_event_id = []
+		self.high_q_energy = []
 
         def Physics(self, frame):
                 try:
@@ -257,6 +264,11 @@ class ehe_collector(icetray.I3ConditionalModule):
 		except KeyError:
 			ehe_alert = 2 # for distinguishing reasons uwu
 		
+		try:
+			high_q_like = frame["HighQFilter"].value
+		except KeyError:
+			high_q_like = 0
+			
                 if ehe_like:
                         evt_header = frame["I3EventHeader"]
                         prim = frame["MCPrimary"]
@@ -282,19 +294,29 @@ class ehe_collector(icetray.I3ConditionalModule):
 			self.alert_event_id.append(evt_header.event_id)
 			self.alert_energy.append(prim.energy)
 		
+		if high_q_like:
+			evt_header = frame["I3EventHeader"]
+                        prim = frame["MCPrimary"]
+                        self.high_q_run_id.append(evt_header.run_id)
+                        self.high_q_event_id.append(evt_header.event_id)
+                        self.high_q_energy.append(prim.energy)
+
 		self.PushFrame(frame)
 
         def Finish(self):
                 out_dict = {"energy": self.energy, "run_id": self.run_id, "event_id": self.event_id}
                 out_dict2 = {"energy": self.my_energy, "run_id": self.my_run_id, "event_id": self.my_event_id}
 		out_dict3 = {"energy": self.alert_energy, "run_id": self.alert_run_id, "event_id": self.alert_event_id}
+		out_dict4 = {"energy": self.high_q_energy, "run_id": self.high_q_run_id, "event_id": self.high_q_event_id}
 		with open(self.outfile, "w") as outf:
                         json.dump(out_dict, fp=outf, indent=2)
 		with open(self.second_outfile, "w") as outf:
 			json.dump(out_dict2, fp=outf, indent=2)
 		with open(self.alert_outfile, "w") as outf:
 			json.dump(out_dict3, fp=outf, indent=2)
-                print("Wrote output file to:\n ", self.outfile, self.second_outfile, self.alert_outfile)
+		with open(self.high_q_outfile, "w") as outf:
+			json.dump(out_dict4, fp=outf, indent=2)
+                print("Wrote output file to:\n ", self.outfile, self.second_outfile, self.alert_outfile, self.high_q_outfile)
 
 
 @icetray.traysegment
