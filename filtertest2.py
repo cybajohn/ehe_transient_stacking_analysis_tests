@@ -137,6 +137,7 @@ tray.AddModule(ehe_collector,"collector",
 		outfilename = outfile + "/ehe_test_stats",
 		outfilename2 = outfile + "/my_ehe_test_stats",
 		outfilename3 = outfile + "/alert_stats",
+		outfilename4 = outfile + "/high_q_stats",
 		If = which_split(split_name='InIceSplit')
 		)
 
