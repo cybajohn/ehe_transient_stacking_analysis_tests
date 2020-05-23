@@ -22,6 +22,8 @@ import tdepps.utils.phys as phys
 from _paths import PATHS
 import _loader
 
+from tdepps.utils import make_time_dep_dec_splines
+
 from matplotlib import pyplot as plt
 
 def flux_model_factory(model, **model_args):
@@ -195,7 +197,7 @@ else:
 sin_dec_sig = np.sin(MC["dec"])
 logE_sig = MC["logE"]
 w_sig = MC["ow"] * llhmod._energy_opts["flux_model"](MC["trueE"])
-
+"""
 _bx, _by = llhmod._energy_opts["bins"]
 h_bg, _, _ = np.histogram2d(sin_dec_bg, logE_bg, weights=w_bg,
                             bins=[_bx, _by], normed=True)
@@ -233,6 +235,40 @@ plt.clf()
 plt.hist2d(sin_dec_sig, logE_sig, weights=w_sig, bins=[_bx, _by], normed=True, cmap=plt.cm.get_cmap("OrRd"))
 plt.colorbar()
 plt.savefig("plot_stash/sig_sindec_energy_2dhist.pdf")
+plt.clf()
+"""
+# lambda background part
+# Get sindec rate spline for each source, averaged over its time window
+print(llhmod._log.INFO("Create time dep sindec splines."))
+sin_dec_bins = llhmod._spatial_opts["sindec_bins"]
+srcs = llhmod._srcs
+sin_dec_splines, spl_info = make_time_dep_dec_splines(
+	X=X, srcs=srcs, run_list=runlist, sin_dec_bins=sin_dec_bins,
+	rate_rebins=llhmod._spatial_opts["rate_rebins"],
+        spl_s=llhmod._spatial_opts["spl_s"],
+        n_scan_bins=llhmod._spatial_opts["n_scan_bins"])
+
+# Step 2: Cache fixed LLH args
+# Cache expected nb for each source from allsky rate func integral
+src_t = srcs["time"]
+src_trange = np.vstack((srcs["dt0"], srcs["dt1"])).T
+nb = spl_info["allsky_rate_func"].integral(
+        src_t, src_trange, spl_info["allsky_best_params"])
+assert len(nb) == len(src_t)
+print(nb)
+print(len(nb))
+print(type(spl_info["allsky_rate_func"]))
+print("params: ",spl_info["allsky_best_params"])
+print(spl_info["allsky_rate_func"].fun(src_t,spl_info["allsky_best_params"]))
+print(src_t)
+
+mjd = np.linspace(56100,57100,1000)
+allsky_rate = spl_info["allsky_rate_func"].fun(mjd,spl_info["allsky_best_params"])
+plt.plot(mjd,allsky_rate*10**3)
+plt.ylim(0,10)
+plt.ylabel("Rate in mHz")
+plt.xlabel("Time in MJD days")
+plt.savefig("plot_stash/allsky_rate_bg_2012-2014.pdf")
 plt.clf()
 
 def my_make_grid_interp_from_hist(hist, bins, edge_fillval,
