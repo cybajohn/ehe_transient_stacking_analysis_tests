@@ -22,6 +22,8 @@ import tdepps.utils.phys as phys
 from _paths import PATHS
 import _loader
 
+
+
 from tdepps.utils import make_time_dep_dec_splines
 
 from matplotlib import pyplot as plt
@@ -248,6 +250,32 @@ sin_dec_splines, spl_info = make_time_dep_dec_splines(
         spl_s=llhmod._spatial_opts["spl_s"],
         n_scan_bins=llhmod._spatial_opts["n_scan_bins"])
 
+# to plot rate
+ev_t = X["time"]
+ev_sin_dec = np.sin(X["dec"])
+src_t = srcs["time"]
+src_trange = np.vstack((srcs["dt0"], srcs["dt1"])).T
+sin_dec_bins = np.atleast_1d(sin_dec_bins)
+rate_rebins = np.atleast_1d(llhmod._spatial_opts["rate_rebins"])
+
+norm = np.diff(sin_dec_bins)
+rate_rec = phys.make_rate_records(run_list=runlist, ev_runids=X["Run"])
+
+# 1) Get phase offset from allsky fit for good amp and baseline fits.
+#    Only fix the period to 1 year, as expected from seasons.
+p_fix = 365.
+#    Fit amp, phase and base using rebinned rates
+rates, new_rate_bins, rates_std, _ = phys.rebin_rate_rec(
+	    rate_rec, bins=rate_rebins, ignore_zero_runs=True)
+rate_bin_mids = 0.5 * (new_rate_bins[:-1] + new_rate_bins[1:])
+rate_bin_err = np.ones_like(rate_bin_mids)*(0.5 * (new_rate_bins[1]-new_rate_bins[0]))
+print("rate_rec: ",rate_rec)
+print("rate: ", rates)
+print(len(rates))
+print(rate_bin_mids)
+print(len(rate_bin_mids))
+print(rates_std)
+
 # Step 2: Cache fixed LLH args
 # Cache expected nb for each source from allsky rate func integral
 src_t = srcs["time"]
@@ -262,12 +290,15 @@ print("params: ",spl_info["allsky_best_params"])
 print(spl_info["allsky_rate_func"].fun(src_t,spl_info["allsky_best_params"]))
 print(src_t)
 
-mjd = np.linspace(56100,57100,1000)
+mjd = np.linspace(new_rate_bins[0],new_rate_bins[-1]+new_rate_bins[1]-new_rate_bins[0],1000)
 allsky_rate = spl_info["allsky_rate_func"].fun(mjd,spl_info["allsky_best_params"])
-plt.plot(mjd,allsky_rate*10**3)
+plt.plot(mjd,allsky_rate*10**3, label="sine fit")
+plt.errorbar(rate_bin_mids,rates*10**3, xerr=rate_bin_err, yerr=rates_std*10**3, fmt="", ls="none", label="exp_off_data monthly bins")
 plt.ylim(0,10)
 plt.ylabel("Rate in mHz")
 plt.xlabel("Time in MJD days")
+plt.title("allsky_rate bg 2012-2014")
+plt.legend(loc="best")
 plt.savefig("plot_stash/allsky_rate_bg_2012-2014.pdf")
 plt.clf()
 
