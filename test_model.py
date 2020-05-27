@@ -84,6 +84,8 @@ for key in sample_names:
 	opts = _loader._common_loader(key,folder="saved_test_model/settings",info="settings")[key].copy()
 	print("load off data")
 	exp_off = _loader.off_data_loader(key)[key]
+	print("load on data")
+	exp_on = _loader.on_data_loader(key)[key]
 	print("load mc")
 	mc = _loader.mc_loader(source_type=source_type,names=key)[key]
 	print("load srcs")
@@ -269,12 +271,19 @@ rates, new_rate_bins, rates_std, _ = phys.rebin_rate_rec(
 	    rate_rec, bins=rate_rebins, ignore_zero_runs=True)
 rate_bin_mids = 0.5 * (new_rate_bins[:-1] + new_rate_bins[1:])
 rate_bin_err = np.ones_like(rate_bin_mids)*(0.5 * (new_rate_bins[1]-new_rate_bins[0]))
+rate_bin_mids_off = rate_bin_mids
+rates_off = rates
+rates_std_off = rates_std
 print("rate_rec: ",rate_rec)
 print("rate: ", rates)
 print(len(rates))
 print(rate_bin_mids)
 print(len(rate_bin_mids))
 print(rates_std)
+print("exp_off")
+print(exp_off)
+print(len(exp_off))
+
 
 # Step 2: Cache fixed LLH args
 # Cache expected nb for each source from allsky rate func integral
@@ -294,6 +303,8 @@ mjd = np.linspace(new_rate_bins[0],new_rate_bins[-1]+new_rate_bins[1]-new_rate_b
 allsky_rate = spl_info["allsky_rate_func"].fun(mjd,spl_info["allsky_best_params"])
 plt.plot(mjd,allsky_rate*10**3, label="sine fit")
 plt.errorbar(rate_bin_mids,rates*10**3, xerr=rate_bin_err, yerr=rates_std*10**3, fmt="", ls="none", label="exp_off_data monthly bins")
+for time in src_t:
+        plt.axvline(time, color="red")
 plt.ylim(0,10)
 plt.ylabel("Rate in mHz")
 plt.xlabel("Time in MJD days")
@@ -301,6 +312,83 @@ plt.title("allsky_rate bg 2012-2014")
 plt.legend(loc="best")
 plt.savefig("plot_stash/allsky_rate_bg_2012-2014.pdf")
 plt.clf()
+
+
+allsky_off = allsky_rate
+on_and_off_data = np.concatenate((exp_on,exp_off))
+print("exp_on: ", len(exp_on))
+print("all: ", len(on_and_off_data))
+# for convinience
+X = on_and_off_data
+
+sin_dec_splines, spl_info = make_time_dep_dec_splines(
+        X=X, srcs=srcs, run_list=runlist, sin_dec_bins=sin_dec_bins,
+        rate_rebins=llhmod._spatial_opts["rate_rebins"],
+        spl_s=llhmod._spatial_opts["spl_s"],
+        n_scan_bins=llhmod._spatial_opts["n_scan_bins"])
+
+ev_t = X["time"]
+ev_sin_dec = np.sin(X["dec"])
+src_t = srcs["time"]
+src_trange = np.vstack((srcs["dt0"], srcs["dt1"])).T
+sin_dec_bins = np.atleast_1d(sin_dec_bins)
+rate_rebins = np.atleast_1d(llhmod._spatial_opts["rate_rebins"])
+
+norm = np.diff(sin_dec_bins)
+rate_rec = phys.make_rate_records(run_list=runlist, ev_runids=X["Run"])
+
+rates, new_rate_bins, rates_std, _ = phys.rebin_rate_rec(
+            rate_rec, bins=rate_rebins, ignore_zero_runs=True)
+rate_bin_mids = 0.5 * (new_rate_bins[:-1] + new_rate_bins[1:])
+
+allsky_rate = spl_info["allsky_rate_func"].fun(mjd,spl_info["allsky_best_params"])
+plt.plot(mjd,allsky_rate*10**3, label="sine fit")
+plt.errorbar(rate_bin_mids,rates*10**3, xerr=rate_bin_err, yerr=rates_std*10**3, fmt="", ls="none", label="exp_off_and_on_data monthly bins")
+for time in src_t:
+	plt.axvline(time, color="red")
+plt.ylim(0,10)
+plt.ylabel("Rate in mHz")
+plt.xlabel("Time in MJD days")
+plt.title("allsky_rate bg 2012-2014 on and off data")
+plt.legend(loc="best")
+plt.savefig("plot_stash/allsky_rate_bg_2012-2014_on_off.pdf")
+plt.clf()
+
+plt.errorbar(rate_bin_mids,rates*10**3, xerr=rate_bin_err, yerr=rates_std*10**3, fmt="", ls="none", label="exp_off_and_on_data monthly bins")
+plt.errorbar(rate_bin_mids_off,rates_off*10**3, xerr=rate_bin_err, yerr=rates_std_off*10**3, fmt="", ls="none", label="exp_off_data monthly bins")
+for time in src_t:
+        plt.axvline(time, color="red")
+plt.ylim(0,10)
+plt.ylabel("Rate in mHz")
+plt.xlabel("Time in MJD days")
+plt.title("allsky_rate bg 2012-2014 on_off and off data bins")
+plt.legend(loc="best")
+plt.savefig("plot_stash/allsky_rate_bg_2012-2014_on_off_and_off_bins.pdf")
+plt.clf()
+
+
+plt.plot(mjd,allsky_rate*10**3, label="sine fit on and off")
+plt.plot(mjd,allsky_off*10**3, label="sine fit off")
+diff = abs(allsky_rate*10**3-allsky_off*10**3)
+#plt.errorbar(rate_bin_mids,rates*10**3, xerr=rate_bin_err, yerr=rates_std*10**3, fmt="", ls="none", label="exp_off_and_on_data monthly bins")
+#plt.ylim(0,10)
+plt.yscale("log")
+plt.ylabel("Rate in mHz")
+plt.xlabel("Time in MJD days")
+plt.title("allsky_rate bg 2012-2014 on_off and off data")
+plt.legend(loc="best")
+plt.savefig("plot_stash/allsky_rate_bg_2012-2014_on_off_and_off.pdf")
+plt.clf()
+
+plt.plot(mjd,diff)
+plt.yscale("log")
+plt.ylabel("abs(Rate in mHz)")
+plt.xlabel("Time in MJD days")
+plt.title("allsky_rate bg 2012-2014 on_off and off data diff")
+plt.legend(loc="best")
+plt.savefig("plot_stash/allsky_rate_bg_2012-2014_on_off_and_off_diff.pdf")
+plt.clf()
+
 
 def my_make_grid_interp_from_hist(hist, bins, edge_fillval,
                                      interp_col_log, force_y_asc): #todo: adjust for signal/background only
