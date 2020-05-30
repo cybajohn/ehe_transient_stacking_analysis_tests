@@ -117,19 +117,22 @@ def split_data_on_off(ev_t, src_dicts, dt0, dt1):
         print("  - Source {}: {} on time".format(i, np.sum(on_per_src)))
     return offtime
 
-### load data
+### load data, lets just have 2012-2014 for starters
 
 ps_tracks = Datasets["PointSourceTracks"]
 ps_sample_names = [
                 #"IC79", 
-                "IC86, 2011",
+                #"IC86, 2011",
                 "IC86, 2012-2014"
                 ]
-gfu_tracks = Datasets["GFU"]
-gfu_sample_names = ["IC86, 2015"]
+#gfu_tracks = Datasets["GFU"]
+#gfu_sample_names = ["IC86, 2015"]
 all_sample_names = sorted(ps_sample_names
-                         + gfu_sample_names
+#                         + gfu_sample_names
                         )
+
+sources = _loader.source_list_loader("all")
+runlists = _loader.runlist_loader("all")
 
 
 ### step1
@@ -138,6 +141,7 @@ SECINMIN = 60.
 SECINHOUR = 60. * SECINMIN
 SECINDAY = 24. * SECINHOUR
 
+# typo incoming... Can you spot it?
 # Time window lower and upper times relative to sourve time in seconds.
 # Time windows increase logarithmically from +-1 sec to +-2.5 days.
 dt = np.logspace(0, np.log10(2.5 * SECINDAY), 20 + 1)
@@ -176,7 +180,8 @@ for name in all_sample_names:
     print("  Removing {} / {} events outside runs.".format(
         np.sum(~is_inside_runs), len(exp)))
     exp = exp[is_inside_runs]
-
+    
+    # or here for loop:?
     # Split data in on and off parts with the largest time window
     is_offtime = split_data_on_off(exp["time"], sources[name], dt0_min, dt1_max)
 
@@ -184,8 +189,68 @@ for name in all_sample_names:
     exp_on = exp[~is_offtime]
     is_ehe_src = remove_ehe_from_on_data(exp_on, sources[name])
     exp_on = exp_on[~is_ehe_src]
+    
+    opts = _loader._common_loader(key,folder="saved_test_model/settings",info="settings")[name].copy()
+
+    # Check and setup spatial PDF options # from llh_model
+    spatial_opts=opts["model_spatial_opts"]
+    req_keys = ["sindec_bins", "rate_rebins"]
+    opt_keys = {"select_ev_sigma": 5., "spl_s": None, "n_scan_bins": 50,
+                    "kent": True, "n_mc_evts_min": 500}
+    spatial_opts = fill_dict_defaults(spatial_opts, req_keys, opt_keys)
+
+    spatial_opts["sindec_bins"] = np.atleast_1d(spatial_opts["sindec_bins"])
+    spatial_opts["rate_rebins"] = np.atleast_1d(spatial_opts["rate_rebins"])
+    
+    sin_dec_bins = spatial_opts["sindec_bins"]
+    # need to make source records I suppose
+    srcs = sources[name]
+    # here for loop:
+    exp_off = exp[is_offtime]
+    srcs = make_src_records(srcs, dt0=dt0, dt1=dt1)
+    sin_dec_splines, spl_info = make_time_dep_dec_splines(
+    	    X=exp_off, srcs=srcs, run_list=runlists[name], sin_dec_bins=sin_dec_bins,
+       	    rate_rebins=spatial_opts["rate_rebins"],
+            spl_s=spatial_opts["spl_s"],
+            n_scan_bins=spatial_opts["n_scan_bins"])
+    
+    # to plot rate
+    ev_t = exp_off["time"]
+    ev_sin_dec = np.sin(exp_off["dec"])
+    src_t = srcs["time"]
+    src_trange = np.vstack((srcs["dt0"], srcs["dt1"])).T
+    sin_dec_bins = np.atleast_1d(sin_dec_bins)
+    rate_rebins = np.atleast_1d(spatial_opts["rate_rebins"])
+    
+    norm = np.diff(sin_dec_bins)
+    rate_rec = phys.make_rate_records(run_list=runlists[name], ev_runids=exp_off["Run"])
+    
+    # 1) Get phase offset from allsky fit for good amp and baseline fits.
+    #    Only fix the period to 1 year, as expected from seasons.
+    p_fix = 365.
+    #    Fit amp, phase and base using rebinned rates
+    rates, new_rate_bins, rates_std, _ = phys.rebin_rate_rec(
+                rate_rec, bins=rate_rebins, ignore_zero_runs=True)
+    rate_bin_mids = 0.5 * (new_rate_bins[:-1] + new_rate_bins[1:])
+    rate_bin_err = np.ones_like(rate_bin_mids)*(0.5 * (new_rate_bins[1]-new_rate_bins[0]))
+    
+    mjd = np.linspace(new_rate_bins[0],new_rate_bins[-1]+new_rate_bins[1]-new_rate_bins[0],1000)
+    allsky_rate = spl_info["allsky_rate_func"].fun(mjd,spl_info["allsky_best_params"])
+    plt.plot(mjd,allsky_rate*10**3, label="sine fit")
+    plt.errorbar(rate_bin_mids,rates*10**3, xerr=rate_bin_err, yerr=rates_std*10**3, fmt="", ls="none", label="exp_off_data monthly bins")
+    for time in src_t:
+            plt.axvline(time, color="red")
+    plt.ylim(0,10)
+    plt.ylabel("Rate in mHz")
+    plt.xlabel("Time in MJD days")
+    plt.title("allsky_rate bg 2012-2014")
+    plt.legend(loc="best")
+    plt.savefig("plot_stash/allsky_rate_bg_2012-2014.pdf")
+    plt.clf()
 
 
+
+# upcoming just copy pasta stuff
 
 sample_names = _loader.source_list_loader()
 sample_names = [sample_names[2]] # just 2012-2014
