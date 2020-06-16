@@ -112,6 +112,28 @@ def split_data_on_off(ev_t, src_dicts, dt0, dt1):
         print("  - Source {}: {} on time".format(i, np.sum(on_per_src)))
     return offtime
 
+def flux_model_factory(model, **model_args):
+    """
+    Returns a flux model callable `flux_model(trueE)`.
+
+    Parameters
+    ----------
+    model : str
+        Name of a method in ``tdeps.utils.phys``.
+    model_args : dict
+        Arguments passed to ``tdeps.utils.phys.<model>``.
+
+    Returns
+    -------
+    flux_model : callable
+        Function of single parameter, true energy, with fixed model args.
+    """
+    def flux_model(trueE):
+        flux_mod = getattr(phys, model)
+        return flux_mod(trueE, **model_args)
+
+    return flux_model
+
 
 source_type="ehe"
 
@@ -144,7 +166,7 @@ SECINDAY = 24. * SECINHOUR
 # Time windows increase logarithmically from +-1 sec to +-2.5 days.
 # 20+1 steps were default
 dt = np.logspace(0, np.log10(15 * SECINDAY), 4)
-dt = [20 * SECINDAY]
+dt = [5 * SECINDAY]
 
 
 for name in all_sample_names:
@@ -207,6 +229,11 @@ for name in all_sample_names:
 
 	# Check and setup energy PDF options
 	energy_opts = opts["model_energy_opts"]
+	
+	fmod = opts["model_energy_opts"].pop("flux_model")
+        flux_model = flux_model_factory(fmod["model"], **fmod["args"])
+        opts["model_energy_opts"]["flux_model"] = flux_model
+
         req_keys = ["bins", "flux_model"]
         opt_keys = {"mc_bg_w": None, "force_logE_asc": True,
                     "edge_fillval": "minmax_col", "interp_col_log": False}
@@ -245,16 +272,18 @@ for name in all_sample_names:
         srcs = sources[name]
         exp_off = exp[is_offtime]
         srcs = make_src_records(srcs, dt0=-time_window, dt1=time_window)
+	"""
         sin_dec_splines, spl_info = make_time_dep_dec_splines(
                 X=exp_off, srcs=srcs, run_list=runlists[name], sin_dec_bins=sin_dec_bins,
                 rate_rebins=spatial_opts["rate_rebins"],
                 spl_s=spatial_opts["spl_s"],
                 n_scan_bins=spatial_opts["n_scan_bins"],
                 ignore_zero_runs=False)
-
+	"""
 	X = exp_off
 	w_bg = energy_opts["mc_bg_w"]
 	if w_bg is None:
+		print("data")
 	        sin_dec_bg = np.sin(X["dec"])
 	        logE_bg = X["logE"]
 	else:
@@ -270,6 +299,19 @@ for name in all_sample_names:
 	h_sig, _, _ = np.histogram2d(sin_dec_sig, logE_sig, weights=w_sig,
 	                            bins=[_bx, _by], normed=True)
 
+	plt.hist2d(sin_dec_bg, logE_bg, weights=w_bg, bins=[_bx, _by], normed=True, cmap=plt.cm.get_cmap("OrRd"))
+	plt.ylabel(r'Data $\log(E)$')
+	plt.xlabel(r'Data $\sin(\delta)$')
+	plt.colorbar()
+	plt.savefig("plot_stash/bg_sindec_energy_2dhist.pdf")
+	plt.clf()
+	
+	plt.hist2d(sin_dec_sig, logE_sig, weights=w_sig, bins=[_bx, _by], normed=True, cmap=plt.cm.get_cmap("OrRd"))
+	plt.ylabel(r'MC $\log(E)$')
+	plt.xlabel(r'MC $\sin(\delta)$')
+	plt.colorbar()
+	plt.savefig("plot_stash/sig_sindec_energy_2dhist.pdf")
+	plt.clf()
 
 
 
