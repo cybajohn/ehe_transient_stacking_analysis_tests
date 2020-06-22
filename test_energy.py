@@ -6,7 +6,7 @@ import argparse
 import numpy as np
 import sys
 
-from tdepps.utils import make_src_records, make_grid_interp_from_hist_ratio, make_grid_interp_from_hist
+from tdepps.utils import make_src_records, make_grid_interp_from_hist_ratio, make_grid_interp_kintscher_style_second_attempt
 from tdepps.utils import fill_dict_defaults
 from tdepps.grb import GRBLLH, GRBModel, MultiGRBLLH
 from tdepps.grb import TimeDecDependentBGDataInjector
@@ -26,6 +26,8 @@ from skylab.datasets import Datasets
 from tdepps.utils import make_time_dep_dec_splines
 
 from matplotlib import pyplot as plt
+
+print("hello world")
 
 ### functions
 
@@ -313,5 +315,6 @@ for name in all_sample_names:
 	plt.savefig("plot_stash/sig_sindec_energy_2dhist.pdf")
 	plt.clf()
 
-
+	bg, sig, interp_info = make_grid_interp_kintscher_style_second_attempt(h_bg, h_sig, bins = [_bx, _by], give_info=True)
+	print("info: ", interp_info)
 
