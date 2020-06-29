@@ -317,4 +317,25 @@ for name in all_sample_names:
 
 	bg, sig, interp_info = make_grid_interp_kintscher_style_second_attempt(h_bg, h_sig, bins = [_bx, _by], give_info=True)
 	print("info: ", interp_info)
+	
+	print("x_bins: ",_bx)
+	print("y_bins: ",_by)
+	sig_energy_list = np.zeros(shape=(40,40))
+	x = np.linspace(_bx[0],_bx[-1],40)
+	y = np.linspace(_by[0],_by[-1],40)
+	for _x,i in enumerate(x):
+		for _y,j in enumerate(y):
+			print(i,j)
+			sig_energy_list[_x][_y] = sig([i,j])
+
+	np.savetxt("plot_stash/data/sig_energy_spline.txt",sig_energy_list, delimiter=",")
+	
+	bg_energy_list = np.zeros(shape=(40,40))
+	for _x,i in enumerate(x):
+                for _y,j in enumerate(y):
+                        print(i,j)
+                        bg_energy_list[_x][_y] = bg([i,j])
+
+        np.savetxt("plot_stash/data/bg_energy_spline.txt",bg_energy_list, delimiter=",")
+
 
