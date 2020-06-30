@@ -296,11 +296,16 @@ for name in all_sample_names:
 	w_sig = MC["ow"] * energy_opts["flux_model"](MC["trueE"])
 	
 	_bx, _by = energy_opts["bins"]
-	h_bg, _, _ = np.histogram2d(sin_dec_bg, logE_bg, weights=w_bg,
+	h_bg, _x_edge, _y_edge = np.histogram2d(sin_dec_bg, logE_bg, weights=w_bg,
 	                            bins=[_bx, _by], normed=True)
 	h_sig, _, _ = np.histogram2d(sin_dec_sig, logE_sig, weights=w_sig,
 	                            bins=[_bx, _by], normed=True)
-
+	
+	np.savetxt("plot_stash/data/sig_energy_hist.txt",h_sig, delimiter=",")
+	np.savetxt("plot_stash/data/bg_energy_hist.txt",h_bg, delimiter=",")
+	np.savetxt("plot_stash/data/energy_bins_x.txt",_x_edge, delimiter=",")
+	np.savetxt("plot_stash/data/energy_bins_y.txt",_y_edge, delimiter=",")
+			
 	plt.hist2d(sin_dec_bg, logE_bg, weights=w_bg, bins=[_bx, _by], normed=True, cmap=plt.cm.get_cmap("OrRd"))
 	plt.ylabel(r'Data $\log(E)$')
 	plt.xlabel(r'Data $\sin(\delta)$')
