@@ -163,5 +163,6 @@ for k, src_time in enumerate(source_times):
 	overlap = interval_overlap(src_time[0],src_time[1], dataset_times_start, dataset_times_stop)
 	weights[k] = overlap/np.sum(overlap)
 print(weights)
+print(np.sum(weights,axis=0))
 print("finished")
 
