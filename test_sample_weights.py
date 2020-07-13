@@ -72,6 +72,11 @@ rndgen = np.random.RandomState(rnd_seed)
 # just one tw
 dt0, dt1 = _loader.time_window_loader(19)
 
+# lets play
+dayinsec = 60.*60.*24.
+dt0 = -400*dayinsec
+dt1 = 400*dayinsec
+
 # Load files and build the models one after another to save memory
 bg_injs = {}
 sig_injs = {}
@@ -84,6 +89,11 @@ llhs = {}
 sample_names = _loader.source_list_loader()
 sample_names = sample_names[2:] # without IC79, IC86_2011
 source_type = "ehe" # "ehe" or "hese"
+
+all_srcs = []
+for key in sample_names:
+	print(type(_loader.source_list_loader(key)[key]))
+	all_srcs.extend(_loader.source_list_loader(key)[key])
 
 for key in sample_names:
         print("\n" + 80 * "#")
@@ -101,8 +111,9 @@ for key in sample_names:
         print("load runlist")
         runlist = _loader.runlist_loader(key)[key]
         # Process to tdepps format
-        srcs_rec = make_src_records(srcs, dt0=dt0, dt1=dt1)
-
+        #srcs_rec = make_src_records(srcs, dt0=dt0, dt1=dt1)
+	srcs_rec = phys.make_src_records_version_2(all_srcs, dt0=dt0, dt1=dt1, 
+						X=np.concatenate((exp_off,exp_on)))
         # Setup BG injector
         print("setup bg injector")
         bg_inj_i = TimeDecDependentBGDataInjector(inj_opts=opts["bg_inj_opts"],
@@ -149,12 +160,15 @@ source_times = []
 dataset_times_start = []
 dataset_times_stop = []
 for key, model in multi_llh.model.items():
+	j_start, j_stop = model.dataset_bounds
 	for k, time in enumerate(model.srcs["time"]):
-		start = model.srcs["dt0"][k]/secinday + time
-		stop = model.srcs["dt1"][k]/secinday + time
-		source_times.append([start,stop])
-	dataset_times_start.append(model.dataset_bounds[0])
-	dataset_times_stop.append(model.dataset_bounds[1])
+		is_in_sample = (time < j_stop) and (time > j_start)
+		if is_in_sample:
+			start = model.srcs["dt0_origin"][k]/secinday + time
+			stop = model.srcs["dt1_origin"][k]/secinday + time
+			source_times.append([start,stop])
+	dataset_times_start.append(j_start)
+	dataset_times_stop.append(j_stop)
 
 
 weights = np.zeros(shape=(len(source_times),len(dataset_times_start)))
@@ -165,4 +179,7 @@ for k, src_time in enumerate(source_times):
 print(weights)
 print(np.sum(weights,axis=0))
 print("finished")
+
+print(multi_llh._ns_weights)
+print(dt0,dt1)
 
