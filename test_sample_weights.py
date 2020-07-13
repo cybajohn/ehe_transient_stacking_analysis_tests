@@ -112,7 +112,7 @@ for key in sample_names:
         runlist = _loader.runlist_loader(key)[key]
         # Process to tdepps format
         #srcs_rec = make_src_records(srcs, dt0=dt0, dt1=dt1)
-	srcs_rec = phys.make_src_records_version_2(all_srcs, dt0=dt0, dt1=dt1, 
+	srcs_rec = phys.make_src_records_from_all_srcs(all_srcs, dt0=dt0, dt1=dt1, 
 						X=np.concatenate((exp_off,exp_on)))
         # Setup BG injector
         print("setup bg injector")
