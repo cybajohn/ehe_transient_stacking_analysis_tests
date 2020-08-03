@@ -190,11 +190,27 @@ for key in all_sample_names:
         CDFs = np.cumsum(sample_w, axis=1)
         sample_CDFs = CDFs / CDFs[:, [-1]]
 	print(sample_CDFs)
-	print(type(sample_CDFs))
+	print(type(sample_CDFs[0]))
+	print(type(sin_dec_pdf_splines[0]))
 	print(len(sample_CDFs))
-
-
-
-
+	x = np.linspace(-1,1,1000)
+	plt.plot(np.sort(ev_sin_dec),sample_CDFs[0],label="example CDF")
+	plt.xlabel(r'$\sin(\delta)$ (data)')
+	plt.legend(loc='best')
+	plt.savefig("plot_stash/sampling/CDF_0.pdf")
+	plt.clf()
+	plt.plot(x,sin_dec_splines[0](x),label="example sin_dec_spline")
+	plt.xlabel(r'$\sin(\delta)$ (spline)')
+        plt.legend(loc='best')
+	plt.savefig("plot_stash/sampling/sin_dec_spline_0.pdf")
+	plt.clf()
+	plt.plot(np.sort(ev_sin_dec),sample_w[0],label="example weights")
+	plt.xlabel(r'$\sin(\delta)$ (data)')
+        plt.legend(loc='best')
+	plt.savefig("plot_stash/sampling/sample_w_0.pdf")
+	plt.clf()
+	plt.plot(np.sort(ev_sin_dec),_vals)
+	plt.xlabel(r'$\sin(\delta)$ (data)')
+	plt.savefig("plot_stash/sampling/_vals.pdf")
 
 print("fin :)")
