@@ -99,9 +99,7 @@ for key in all_sample_names:
         all_srcs.extend(_loader.source_list_loader(key)[key])
 
 for key in all_sample_names:
-	dt = 5 * SECINDAY
-	dt0 = -dt
-	dt1 = dt
+	dts = np.logspace(-1.3,2.3,5) * SECINDAY
 	key = key.replace(", ", "_")
     	print("Working with sample {}".format(key))
 	opts = _loader._common_loader(key,folder="saved_test_model/settings",info="settings")[key].copy()
@@ -111,17 +109,12 @@ for key in all_sample_names:
         exp_on = _loader.on_data_loader(key)[key]
         print("load mc")
         mc = _loader.mc_loader(source_type=source_type,names=key)[key]
-        print("load srcs")
-        srcs = _loader.source_list_loader(key)[key]
         print("load runlist")
         runlist = _loader.runlist_loader(key)[key]
         # Process to tdepps format
 	X = np.concatenate((exp_off,exp_on))
-	srcs = phys.make_src_records_from_all_srcs(all_srcs, dt0=dt0, dt1=dt1,
-                                                X=X)
 
-
-        # Check and setup spatial PDF options # from llh_model
+	# Check and setup spatial PDF options # from llh_model
         spatial_opts=opts["model_spatial_opts"]
         req_keys = ["sindec_bins", "rate_rebins"]
         opt_keys = {"select_ev_sigma": 5., "spl_s": None, "n_scan_bins": 50,
@@ -147,62 +140,104 @@ for key in all_sample_names:
 
         sin_dec_bins, logE_bins = map(np.atleast_1d, energy_opts["bins"])
         energy_opts["bins"] = [sin_dec_bins, logE_bins]
-
 	
-	sin_dec_splines, spl_info = make_time_dep_dec_splines(
-                X=X, srcs=srcs, run_list=runlists[key], sin_dec_bins=sin_dec_bins,
-                rate_rebins=spatial_opts["rate_rebins"],
-                spl_s=spatial_opts["spl_s"],
-                n_scan_bins=spatial_opts["n_scan_bins"],
-                ignore_zero_runs=False)
-
-	# Normalize sindec splines to be a PDF in sindec for sampling weights
-        def spl_normed_factory(spl, lo, hi, norm):
-            """ Renormalize spline, so ``int_lo^hi renorm_spl dx = norm`` """
-            return spl_normed(spl=spl, norm=norm, lo=lo, hi=hi)
-
-        lo, hi = sin_dec_bins[0], sin_dec_bins[-1]
-        sin_dec_pdf_splines = []
-        for spl in sin_dec_splines:
-            sin_dec_pdf_splines.append(spl_normed_factory(spl, lo, hi, norm=1.))
+	spline_list = []
+	spline_list2 = []
 	
-        # Make sampling CDFs to sample sindecs per source per trial
-        # First a PDF spline to estimate intrinsic data sindec distribution
-        ev_sin_dec = np.sin(X["dec"])
-	inj_opts = opts["bg_inj_opts"]
-        _bins = make_equdist_bins(
-            ev_sin_dec, lo, hi, weights=None,
-            min_evts_per_bin=inj_opts["n_data_evts_min"])
-        # Spline is interpolating to cover the data densitiy as fine as possible
-        # because for resampling we divide by the initial densitiy.
-        hist = np.histogram(ev_sin_dec, bins=_bins, density=True)[0]
-        data_spl = fit_spl_to_hist(hist, bins=_bins, w=None, s=0)[0]
-        data_spl = spl_normed_factory(data_spl, lo, hi, norm=1.)
-
-        # Build sampling weights from PDF ratios
-        sample_w = np.empty((len(sin_dec_pdf_splines), len(ev_sin_dec)),
-                            dtype=float)
-        _vals = data_spl(ev_sin_dec)
-        for i, spl in enumerate(sin_dec_pdf_splines):
-            sample_w[i] = spl(ev_sin_dec) / _vals
-
-        # Cache fixed sampling CDFs for fast random choice
-        CDFs = np.cumsum(sample_w, axis=1)
-        sample_CDFs = CDFs / CDFs[:, [-1]]
-	print(sample_CDFs)
-	print(type(sample_CDFs[0]))
-	print(type(sin_dec_pdf_splines[0]))
-	print(len(sample_CDFs))
+	for j,timewindow in enumerate(dts):
+		print("timewindow: ", timewindow * 2.)
+		srcs = phys.make_src_records_from_all_srcs(all_srcs, dt0=-timewindow, dt1=timewindow,
+                                                X=X)
+		
+		sin_dec_splines, spl_info = make_time_dep_dec_splines(
+                	X=X, srcs=srcs, run_list=runlists[key], sin_dec_bins=sin_dec_bins,
+                	rate_rebins=spatial_opts["rate_rebins"],
+                	spl_s=spatial_opts["spl_s"],
+                	n_scan_bins=spatial_opts["n_scan_bins"],
+                	ignore_zero_runs=False)
+		
+		# Normalize sindec splines to be a PDF in sindec for sampling weights
+        	def spl_normed_factory(spl, lo, hi, norm):
+            		""" Renormalize spline, so ``int_lo^hi renorm_spl dx = norm`` """
+            		return spl_normed(spl=spl, norm=norm, lo=lo, hi=hi)
+		
+        	lo, hi = sin_dec_bins[0], sin_dec_bins[-1]
+        	sin_dec_pdf_splines = []
+        	for spl in sin_dec_splines:
+            		sin_dec_pdf_splines.append(spl_normed_factory(spl, lo, hi, norm=1.))
+	
+        	# Make sampling CDFs to sample sindecs per source per trial
+        	# First a PDF spline to estimate intrinsic data sindec distribution
+        	ev_sin_dec = np.sin(X["dec"])
+		inj_opts = opts["bg_inj_opts"]
+        	_bins = make_equdist_bins(
+            		ev_sin_dec, lo, hi, weights=None,
+            		min_evts_per_bin=inj_opts["n_data_evts_min"])
+        	# Spline is interpolating to cover the data densitiy as fine as possible
+        	# because for resampling we divide by the initial densitiy.
+        	hist = np.histogram(ev_sin_dec, bins=_bins, density=True)[0]
+        	data_spl = fit_spl_to_hist(hist, bins=_bins, w=None, s=0)[0]
+        	data_spl = spl_normed_factory(data_spl, lo, hi, norm=1.)
+		
+        	# Build sampling weights from PDF ratios
+        	sample_w = np.empty((len(sin_dec_pdf_splines), len(ev_sin_dec)),
+                	            dtype=float)
+        	_vals = data_spl(ev_sin_dec)
+        	for i, spl in enumerate(sin_dec_pdf_splines):
+            		sample_w[i] = spl(ev_sin_dec) / _vals
+		
+        	# Cache fixed sampling CDFs for fast random choice
+        	CDFs = np.cumsum(sample_w, axis=1)
+        	sample_CDFs = CDFs / CDFs[:, [-1]]
+		x = np.linspace(-1,1,1000)
+		"""
+		plt.plot(np.sort(ev_sin_dec),sample_CDFs[0],label="example CDF")
+		plt.xlabel(r'$\sin(\delta)$ (data)')
+		plt.legend(loc='best')
+		plt.savefig("plot_stash/sampling/CDF_0.pdf")
+		
+		plt.clf()
+		"""
+		spline_list.append(sin_dec_splines[0])
+		if j==2:
+			for i,spline in enumerate(sin_dec_splines):
+                		plt.plot(x,spline(x)/(np.sum(spline(x))*2./len(x)),label = "source "+str(i))
+        		plt.xlabel(r'$\sin(\delta)$ (spline)')
+        		plt.legend(loc='best')
+		        plt.savefig("plot_stash/sampling/sin_dec_spline_all_"+ str(timewindow*2/SECINDAY)+ ".pdf")
+			plt.clf()
+			special_spline = sin_dec_splines
+		#plt.plot(x,sin_dec_splines[0](x))#,label="example sin_dec_spline")
 	x = np.linspace(-1,1,1000)
-	plt.plot(np.sort(ev_sin_dec),sample_CDFs[0],label="example CDF")
-	plt.xlabel(r'$\sin(\delta)$ (data)')
-	plt.legend(loc='best')
-	plt.savefig("plot_stash/sampling/CDF_0.pdf")
-	plt.clf()
-	plt.plot(x,sin_dec_splines[0](x),label="example sin_dec_spline")
+	for i,spline in enumerate(spline_list):
+		plt.plot(x,spline(x)/(np.sum(spline(x))*2./len(x)), label=str(dts[i]*2./SECINDAY)+" days")
 	plt.xlabel(r'$\sin(\delta)$ (spline)')
         plt.legend(loc='best')
-	plt.savefig("plot_stash/sampling/sin_dec_spline_0.pdf")
+	plt.savefig("plot_stash/sampling/sin_dec_spline_0_all_timewindows.pdf")
+	plt.clf()
+	for i,spline in enumerate(sin_dec_splines):
+		plt.plot(x,spline(x)/(np.sum(spline(x))*2./len(x)),label = "source "+str(i))
+	plt.xlabel(r'$\sin(\delta)$ (spline)')
+        plt.legend(loc='best')
+        plt.savefig("plot_stash/sampling/sin_dec_spline_all.pdf")
+	plt.clf()
+        for i,spline in enumerate(special_spline):
+                plt.plot(x,spline(x)/(np.sum(spline(x))*2./len(x)),label = "source "+str(i)+" low time")
+		#plt.plot(x,sin_dec_splines[i](x)/(np.sum(sin_dec_splines[i](x))*2./len(x)),label = "source "+str(i)+" 400 days")
+        plt.plot(x,sin_dec_splines[3](x)/(np.sum(sin_dec_splines[3](x))*2./len(x)),label = "source "+str(3)+" 400 days")
+
+	plt.xlabel(r'$\sin(\delta)$ (spline)')
+        plt.legend(loc='best')
+        plt.savefig("plot_stash/sampling/sin_dec_spline_all_time_comp.pdf")
+	plt.clf()
+	plt.plot(x,sin_dec_splines[5](x)/(np.sum(sin_dec_splines[5](x))*2./len(x)),label = "source "+str(5)+" 400 days")
+	plt.plot(x,sin_dec_splines[7](x)/(np.sum(sin_dec_splines[7](x))*2./len(x)),label = "source "+str(7)+" 400 days")
+	plt.plot(x,special_spline[5](x)/(np.sum(special_spline[5](x))*2./len(x)),label = "source "+str(5)+" 6 days")
+        plt.plot(x,special_spline[7](x)/(np.sum(special_spline[7](x))*2./len(x)),label = "source "+str(7)+" 6 days")
+	plt.xlabel(r'$\sin(\delta)$ (spline)')
+        plt.legend(loc='best')
+        plt.savefig("plot_stash/sampling/sin_dec_spline_special_comp.pdf")
+	"""
 	plt.clf()
 	plt.plot(np.sort(ev_sin_dec),sample_w[0],label="example weights")
 	plt.xlabel(r'$\sin(\delta)$ (data)')
@@ -212,5 +247,5 @@ for key in all_sample_names:
 	plt.plot(np.sort(ev_sin_dec),_vals)
 	plt.xlabel(r'$\sin(\delta)$ (data)')
 	plt.savefig("plot_stash/sampling/_vals.pdf")
-
+	"""
 print("fin :)")
