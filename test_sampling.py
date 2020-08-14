@@ -248,4 +248,24 @@ for key in all_sample_names:
 	plt.xlabel(r'$\sin(\delta)$ (data)')
 	plt.savefig("plot_stash/sampling/_vals.pdf")
 	"""
+
+plt.clf()
+mjd = np.linspace(np.amin(X["time"]),np.amax(X["time"]),1000)
+allsky_rate = spl_info["allsky_rate_func"].fun(mjd,spl_info["allsky_best_params"])
+plt.plot(mjd,allsky_rate*10**3, label="sine fit")
+plt.axvline(srcs["time"][5], color="red")
+plt.axvline(srcs["time"][7], color="red")
+plt.ylim(0,10)
+plt.ylabel("Rate in mHz")
+plt.xlabel("Time in MJD days")
+plt.legend(loc="best")
+plt.savefig("plot_stash/sampling/allsky_rate_bg_2012-2014.pdf")
+plt.clf()
+
+
+print("sample_time: ",np.amin(X["time"]),np.amax(X["time"]))
+print("src_5_time: ",srcs["time"][5])
+print("src_7_time: ",srcs["time"][7])
+
+
 print("fin :)")
