@@ -27,6 +27,8 @@ from tdepps.utils import make_equdist_bins
 
 from matplotlib import pyplot as plt
 
+from matplotlib import gridspec
+
 print("hello world")
 
 ### functions
@@ -207,6 +209,7 @@ for key in all_sample_names:
 		        plt.savefig("plot_stash/sampling/sin_dec_spline_all_"+ str(timewindow*2/SECINDAY)+ ".pdf")
 			plt.clf()
 			special_spline = sin_dec_splines
+			special_time = timewindow
 		#plt.plot(x,sin_dec_splines[0](x))#,label="example sin_dec_spline")
 	x = np.linspace(-1,1,1000)
 	for i,spline in enumerate(spline_list):
@@ -250,15 +253,38 @@ for key in all_sample_names:
 	"""
 
 plt.clf()
+
+fig = plt.figure(figsize=(6, 7)) 
+gs = gridspec.GridSpec(2, 1, height_ratios=[5, 2]) 
+ax0 = plt.subplot(gs[0])
+ax0.plot(x,sin_dec_splines[5](x)/(np.sum(sin_dec_splines[5](x))*2./len(x)),label = "source "+str(5)+" 400 days")
+ax0.plot(x,sin_dec_splines[7](x)/(np.sum(sin_dec_splines[7](x))*2./len(x)),label = "source "+str(7)+" 400 days")
+ax0.plot(x,special_spline[5](x)/(np.sum(special_spline[5](x))*2./len(x)),label = "source "+str(5)+" 6 days")
+ax0.plot(x,special_spline[7](x)/(np.sum(special_spline[7](x))*2./len(x)),label = "source "+str(7)+" 6 days")
+#ax0.set_ylim(0,1)
+ax0.set_xlabel(r'$\sin(\delta)$ (spline)')
+ax0.set_ylabel(r'PDF')
+ax0.legend(loc='best')
+
+
+ax1 = plt.subplot(gs[1])
+
+
+
 mjd = np.linspace(np.amin(X["time"]),np.amax(X["time"]),1000)
 allsky_rate = spl_info["allsky_rate_func"].fun(mjd,spl_info["allsky_best_params"])
-plt.plot(mjd,allsky_rate*10**3, label="sine fit")
-plt.axvline(srcs["time"][5], color="red")
-plt.axvline(srcs["time"][7], color="red")
-plt.ylim(0,10)
-plt.ylabel("Rate in mHz")
-plt.xlabel("Time in MJD days")
-plt.legend(loc="best")
+ax1.plot(mjd,allsky_rate*10**3, label="sine fit")
+ax1.axvline(srcs["time"][5], color="green")
+ax1.axvline(srcs["time"][7], color="red")
+ax1.axvspan(srcs["time"][5]-special_time/SECINDAY,srcs["time"][5]+special_time/SECINDAY,alpha=0.5,color="green")
+ax1.axvspan(srcs["time"][7]-special_time/SECINDAY,srcs["time"][7]+special_time/SECINDAY,alpha=0.5,color="red")
+ax1.axvspan(srcs["time"][5]-dts[-1]/SECINDAY,srcs["time"][5]+dts[-1]/SECINDAY,alpha=0.1,color="green")
+ax1.axvspan(srcs["time"][7]-dts[-1]/SECINDAY,srcs["time"][7]+dts[-1]/SECINDAY,alpha=0.1,color="red")
+
+
+ax1.set_ylabel("Rate in mHz")
+ax1.set_xlabel("Time in MJD days")
+ax1.legend(loc="best")
 plt.savefig("plot_stash/sampling/allsky_rate_bg_2012-2014.pdf")
 plt.clf()
 
