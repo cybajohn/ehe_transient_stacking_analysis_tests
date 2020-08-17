@@ -176,8 +176,12 @@ for key in all_sample_names:
 		
         	lo, hi = sin_dec_bins[0], sin_dec_bins[-1]
         	sin_dec_pdf_splines = []
+		unique_sin_dec_pdf_splines = []
         	for spl in sin_dec_splines:
             		sin_dec_pdf_splines.append(spl_normed_factory(spl, lo, hi, norm=1.))
+		
+		for u_spl in unique_sin_dec_splines:
+			unique_sin_dec_pdf_splines.append(spl_normed_factory(u_spl, lo, hi, norm=1.))
 	
         	# Make sampling CDFs to sample sindecs per source per trial
         	# First a PDF spline to estimate intrinsic data sindec distribution
@@ -195,13 +199,19 @@ for key in all_sample_names:
         	# Build sampling weights from PDF ratios
         	sample_w = np.empty((len(sin_dec_pdf_splines), len(ev_sin_dec)),
                 	            dtype=float)
+		unique_sample_w = np.empty((len(unique_sin_dec_pdf_splines), len(ev_sin_dec)), dtype=float)
         	_vals = data_spl(ev_sin_dec)
         	for i, spl in enumerate(sin_dec_pdf_splines):
             		sample_w[i] = spl(ev_sin_dec) / _vals
 		
+		for i, u_spl in enumerate(unique_sin_dec_pdf_splines):
+			unique_sample_w[i] = u_spl(ev_sin_dec) / _vals
+		
         	# Cache fixed sampling CDFs for fast random choice
         	CDFs = np.cumsum(sample_w, axis=1)
         	sample_CDFs = CDFs / CDFs[:, [-1]]
+		unique_CDFs = np.cumsum(unique_sample_w, axis=1)
+		unique_sample_CDFs = unique_CDFs / unique_CDFs[:, [-1]]
 		x = np.linspace(-1,1,1000)
 		"""
 		plt.plot(np.sort(ev_sin_dec),sample_CDFs[0],label="example CDF")
@@ -264,6 +274,25 @@ for key in all_sample_names:
 	"""
 
 plt.clf()
+for i,cdf in enumerate(unique_sample_CDFs):
+	plt.plot(np.sort(ev_sin_dec),cdf,label=str(i)+" unique CDF 400 days")
+plt.xlabel(r'$\sin(\delta)$ (data)')
+plt.legend(loc='best')
+plt.savefig("plot_stash/sampling/unique_CDFs_400_d.pdf")
+                
+plt.clf()
+
+
+
+
+for i,spline in enumerate(unique_sin_dec_pdf_splines):
+        plt.plot(x,spline(x), label=str(i)+" 400 days")
+plt.xlabel(r'$\sin(\delta)$ (spline)')
+plt.legend(loc='best')
+plt.savefig("plot_stash/sampling/unique_sin_dec_splines_400_d.pdf")
+plt.clf()
+
+
 
 fig = plt.figure(figsize=(6, 7)) 
 gs = gridspec.GridSpec(2, 1, height_ratios=[5, 2]) 
@@ -298,6 +327,9 @@ ax1.set_xlabel("Time in MJD days")
 ax1.legend(loc="best")
 plt.savefig("plot_stash/sampling/allsky_rate_bg_2012-2014.pdf")
 plt.clf()
+
+
+
 
 
 print("sample_time: ",np.amin(X["time"]),np.amax(X["time"]))
