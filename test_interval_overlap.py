@@ -31,6 +31,12 @@ def merge_intervals(intervals):
 times = [[0,3],[2,6],[5,9],[10,14],[12,16]]
 times2 = [[0,1],[0,3],[2,6],[5,9],[10,14],[12,16],[15,16],[14,16]]
 
+times3 = np.array(times2)
+
+print("times3: ", times3)
+times3.sort(axis=0)
+print("sorted: ", times3)
+
 print(times2)
 print(merge_intervals(times2))
 

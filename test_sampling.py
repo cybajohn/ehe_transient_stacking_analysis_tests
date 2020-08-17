@@ -23,6 +23,7 @@ from astropy.time import Time as astrotime
 from skylab.datasets import Datasets
 
 from tdepps.utils import fit_spl_to_hist, make_time_dep_dec_splines, spl_normed
+from tdepps.utils import make_unique_time_dep_dec_splines
 from tdepps.utils import make_equdist_bins
 
 from matplotlib import pyplot as plt
@@ -158,6 +159,16 @@ for key in all_sample_names:
                 	n_scan_bins=spatial_opts["n_scan_bins"],
                 	ignore_zero_runs=False)
 		
+		unique_sin_dec_splines, spl_info_unique = make_unique_time_dep_dec_splines(
+                        X=X, srcs=srcs, run_list=runlists[key], sin_dec_bins=sin_dec_bins,
+                        rate_rebins=spatial_opts["rate_rebins"],
+                        spl_s=spatial_opts["spl_s"],
+                        n_scan_bins=spatial_opts["n_scan_bins"],
+                        ignore_zero_runs=False)
+
+
+
+
 		# Normalize sindec splines to be a PDF in sindec for sampling weights
         	def spl_normed_factory(spl, lo, hi, norm):
             		""" Renormalize spline, so ``int_lo^hi renorm_spl dx = norm`` """
