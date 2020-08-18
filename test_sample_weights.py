@@ -118,9 +118,9 @@ for key in sample_names:
         print("setup bg injector")
         bg_inj_i = TimeDecDependentBGDataInjector(inj_opts=opts["bg_inj_opts"],
                                                       random_state=rndgen)
-        #print("fit bg injector")
-        #bg_inj_i.fit(X=exp_off, srcs=srcs_rec, run_list=runlist)
-        #bg_injs[key] = bg_inj_i
+        print("fit bg injector")
+        bg_inj_i.fit(X=np.concatenate((exp_off,exp_on)), srcs=srcs_rec, run_list=runlist)
+        bg_injs[key] = bg_inj_i
 
         # Setup LLH model and LLH
         print("setup ops")
@@ -149,8 +149,11 @@ multi_bg_inj.fit(bg_injs)
 multi_llh_opts = _loader.settings_loader("multi_llh")["multi_llh"]
 multi_llh = MultiGRBLLH(llh_opts=multi_llh_opts)
 multi_llh.fit(llhs=llhs)
-
+for i in range(20):
+	bg_sample = multi_bg_inj.sample()
+	print(bg_sample)
 print(multi_llh.model)
+
 
 # Following code is how the sample weights will be calculated
 # It is using the interval_overlap function from utils/misc.py
