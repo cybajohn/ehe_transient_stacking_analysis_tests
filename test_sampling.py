@@ -276,6 +276,8 @@ for key in all_sample_names:
 plt.clf()
 for i,cdf in enumerate(unique_sample_CDFs):
 	plt.plot(np.sort(ev_sin_dec),cdf,label=str(i)+" unique CDF 400 days")
+for i,cdf in enumerate(sample_CDFs):
+	plt.plot(np.sort(ev_sin_dec),cdf,label=str(i)+" privious CDF 400 days")
 plt.xlabel(r'$\sin(\delta)$ (data)')
 plt.legend(loc='best')
 plt.savefig("plot_stash/sampling/unique_CDFs_400_d.pdf")
@@ -286,7 +288,9 @@ plt.clf()
 
 
 for i,spline in enumerate(unique_sin_dec_pdf_splines):
-        plt.plot(x,spline(x), label=str(i)+" 400 days")
+        plt.plot(x,spline(x), label=str(i)+" unique 400 days")
+for i,spline in enumerate(sin_dec_pdf_splines):
+	plt.plot(x,spline(x), label=str(i)+" source 400 days")
 plt.xlabel(r'$\sin(\delta)$ (spline)')
 plt.legend(loc='best')
 plt.savefig("plot_stash/sampling/unique_sin_dec_splines_400_d.pdf")
