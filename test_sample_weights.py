@@ -154,6 +154,17 @@ for i in range(20):
 	print(bg_sample)
 print(multi_llh.model)
 
+ana = GRBLLHAnalysis(multi_llh, multi_bg_inj, sig_inj=None)
+
+# Do the background trials
+# Seed close to zero, which is close to the minimum for most cases
+ntrials = 50
+print("test_trials")
+trials, nzeros, _ = ana.do_trials(n_trials=ntrials, n_signal=None, ns0=0.1,
+                                  full_out=False)
+
+print("trials: ", trials)
+print("nzeros: ", nzeros)
 
 # Following code is how the sample weights will be calculated
 # It is using the interval_overlap function from utils/misc.py
