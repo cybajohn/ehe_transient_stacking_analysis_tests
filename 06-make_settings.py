@@ -41,10 +41,11 @@ source_type = "ehe"
 for key in sample_names:
     print("Building settings file for sample '{}'".format(key))
     # Load data that settings depend on
-    srcs = source_list_loader(key)[key]
-    runlist = runlist_loader(key)[key]
+    srcs = source_list_loader(key)[key] # not needed
+    runlist = runlist_loader(key)[key] # not needed
     exp_off = off_data_loader(key)[key]
     exp_on = on_data_loader(key)[key]
+    exp_off = np.concatenate((exp_off, exp_on))
     mc = mc_loader(source_type, key)[key]
 
     # :: BG injector ::
