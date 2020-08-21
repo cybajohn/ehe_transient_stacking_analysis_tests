@@ -36,7 +36,7 @@ sindec_bins = np.unique(np.concatenate([
 
 # Make settings for each module per sample
 sample_names = source_list_loader()
-sample_names = [sample_names[2]] # just 2012-2014
+sample_names = [sample_names[1],sample_names[2],sample_names[3]] # except 79
 source_type = "ehe"
 for key in sample_names:
     print("Building settings file for sample '{}'".format(key))
