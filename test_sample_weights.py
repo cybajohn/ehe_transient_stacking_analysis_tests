@@ -87,7 +87,7 @@ llhs = {}
 
 #load models one after another to save memory
 sample_names = _loader.source_list_loader()
-sample_names = sample_names[2:] # without IC79, IC86_2011
+sample_names = sample_names[1:] # without IC79, IC86_2011
 source_type = "ehe" # "ehe" or "hese"
 
 all_srcs = []
@@ -139,7 +139,7 @@ for key in sample_names:
                           energy_opts=opts["model_energy_opts"],
                           time_opts = opts["model_time_opts"])
         print("fit model")
-        llhmod.fit(X=exp_off, MC=mc, srcs=srcs_rec, run_list=runlist)
+        llhmod.fit(X=np.concatenate((exp_off,exp_on)), MC=mc, srcs=srcs_rec, run_list=runlist)
 	llhs[key] = GRBLLH(llh_model=llhmod, llh_opts=opts["llh_opts"])
 
 # Build the multi models
@@ -158,7 +158,7 @@ ana = GRBLLHAnalysis(multi_llh, multi_bg_inj, sig_inj=None)
 
 # Do the background trials
 # Seed close to zero, which is close to the minimum for most cases
-ntrials = 1
+ntrials = 100
 print("test_trials")
 trials, nzeros, _ = ana.do_trials(n_trials=ntrials, n_signal=None, ns0=0.1,
                                   full_out=False)
