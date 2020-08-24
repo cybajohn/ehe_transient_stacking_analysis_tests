@@ -16,7 +16,7 @@ from _paths import PATHS
 from _loader import time_window_loader
 
 
-job_creator = dagman.DAGManJobCreator(mem=2)
+job_creator = dagman.DAGManJobCreator(mem=4)
 job_name = "ehe_transient_stacking"
 
 job_dir = os.path.join(PATHS.jobs, "bg_trials")
