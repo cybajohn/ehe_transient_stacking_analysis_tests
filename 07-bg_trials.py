@@ -67,23 +67,32 @@ llhs = {}
 
 # Load files and build the models one after another to save memory
 sample_names = _loader.source_list_loader()
-sample_names = [sample_names[2]] # just 2012-2014
+sample_names = [sample_names[1],sample_names[2],sample_names[3]] # except 79
 source_type = "ehe" # "ehe" or "hese"
+
+all_srcs = []
+for key in sample_names:
+        print(type(_loader.source_list_loader(key)[key]))
+        all_srcs.extend(_loader.source_list_loader(key)[key])
+
 for key in sample_names:
     print("\n" + 80 * "#")
     print("# :: Setup for sample {} ::".format(key))
     opts = _loader.settings_loader(key)[key].copy()
     exp_off = _loader.off_data_loader(key)[key]
+    exp_on = _loader.on_data_loader(key)[key]
+    X_all = np.concatenate((exp_off,exp_on))
     mc = _loader.mc_loader(source_type=source_type,names=key)[key]
-    srcs = _loader.source_list_loader(key)[key]
+    #srcs = _loader.source_list_loader(key)[key]
     runlist = _loader.runlist_loader(key)[key]
     # Process to tdepps format
-    srcs_rec = make_src_records(srcs, dt0=dt0, dt1=dt1)
+    srcs_rec = phys.make_src_records_from_all_srcs(all_srcs, dt0=dt0,
+						    dt1=dt1, X=X_all)
 
     # Setup BG injector
     bg_inj_i = TimeDecDependentBGDataInjector(inj_opts=opts["bg_inj_opts"],
                                               random_state=rndgen)
-    bg_inj_i.fit(X=exp_off, srcs=srcs_rec, run_list=runlist)
+    bg_inj_i.fit(X=X_all, srcs=srcs_rec, run_list=runlist)
     bg_injs[key] = bg_inj_i
 
     # Setup LLH model and LLH
@@ -100,10 +109,11 @@ for key in sample_names:
                       spatial_opts=opts["model_spatial_opts"],
                       energy_opts=opts["model_energy_opts"],
 		      time_opts = opts["model_time_opts"])
-    llhmod.fit(X=exp_off, MC=mc, srcs=srcs_rec, run_list=runlist)
+    llhmod.fit(X=X_all, MC=mc, srcs=srcs_rec, run_list=runlist)
     llhs[key] = GRBLLH(llh_model=llhmod, llh_opts=opts["llh_opts"])
 
     del exp_off
+    del exp_on
     del mc
     gc.collect()
 
