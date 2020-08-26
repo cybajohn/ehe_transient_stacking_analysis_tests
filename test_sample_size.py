@@ -83,6 +83,9 @@ for key in sample_names:
         print(type(_loader.source_list_loader(key)[key]))
         all_srcs.extend(_loader.source_list_loader(key)[key])
 
+sample_lambdas = {sample_names[0]:[],sample_names[1]:[],sample_names[2]:[]}
+
+
 for key in sample_names:
         print("\n" + 80 * "#")
         print("# :: Setup for sample {} ::".format(key))
@@ -108,9 +111,12 @@ for key in sample_names:
                                                       random_state=rndgen)
         print("fit bg injector")
         bg_inj_i.fit(X=np.concatenate((exp_off,exp_on)), srcs=srcs_rec, run_list=runlist)
+	sample_lambdas[key].append(bg_inj_i._nb)
         bg_injs[key] = bg_inj_i
 
 
+for key,item in sample_lambdas.items():
+	np.savetxt("plot_stash/data/sample_{}_lambdas.txt".format(key),item, delimiter=",")
 
 # Build the multi models
 multi_bg_inj = MultiBGDataInjector()
@@ -121,6 +127,9 @@ for i in tqdm(range(1000)):
         bg_sample = multi_bg_inj.sample()
 	for name in sample_names:
 		sample_sizes[name].append(len(bg_sample[name]))
+
+for key,item in sample_sizes.items():
+        np.savetxt("plot_stash/data/sample_{}_sizes.txt".format(key),item, delimiter=",")
 
 print("fin")
 
