@@ -28,8 +28,13 @@ def sec2timestr(sec):
 
 # Time window lower and upper times relative to sourve time in seconds.
 # Time windows increase logarithmically from +-1 sec to +-2.5 days.
-dt = np.logspace(0, np.log10(2.5 * SECINDAY), 20 + 1)
+#dt = np.logspace(0, np.log10(2.5 * SECINDAY), 20 + 1)
+#dt = np.vstack((-dt, dt)).T
+
+# +-1 to +-400 days
+dt = np.logspace(np.log10(1 * SECINDAY), np.log10(400 * SECINDAY), 20 + 1)
 dt = np.vstack((-dt, dt)).T
+
 
 print("Total time window lengths:")
 for i, dti in enumerate(np.diff(dt).ravel()):
