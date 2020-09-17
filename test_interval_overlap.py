@@ -1,4 +1,42 @@
 import numpy as np
+import _loader
+from tdepps.backend import bg_time_box
+import matplotlib.pyplot as plt
+
+sample_names = _loader.source_list_loader()
+sample_names = sample_names[1:] # without IC79, IC86_2011
+source_type = "ehe" # "ehe" or "hese"
+
+all_srcs = []
+for key in sample_names:
+        print(type(_loader.source_list_loader(key)[key]))
+        all_srcs.extend(_loader.source_list_loader(key)[key])
+srcs_dt0 = np.zeros(shape=(len(all_srcs)))
+srcs_dt1 = np.zeros(shape=(len(all_srcs)))
+srcs_time = np.zeros(shape=(len(all_srcs)))
+
+SECINDAY = 24. * 60. * 60.
+
+days = 100
+
+dt1 = days*SECINDAY
+dt0 = -dt1 
+
+for k,src in enumerate(all_srcs):
+	srcs_time[k] = src["mjd"]
+	srcs_dt0[k] = dt0
+	srcs_dt1[k] = dt1
+
+srcs_time = srcs_time.reshape(len(srcs_time),1)
+srcs_dt_mjd = (np.vstack((srcs_dt0,srcs_dt1)).T / SECINDAY + srcs_time)
+
+
+
+
+print(srcs_time)
+print(srcs_dt_mjd)
+
+
 
 """
 def merge_intervals(intervals):
@@ -77,3 +115,29 @@ i = [1]
 k = i
 k[0] = 2
 print(k,i)
+
+tmp = get_unique_intervals_v2(srcs_dt_mjd)
+print(bg_time_box(tmp, srcs_dt_mjd[:,0], srcs_dt_mjd[:,1]).T)
+print(get_unique_intervals_v2(srcs_dt_mjd))
+print(srcs_dt_mjd)
+#print(bg_time_box(tmp, srcs_dt_mjd[:,0], srcs_dt_mjd[:,1]))
+mask = bg_time_box(tmp, srcs_dt_mjd[:,0], srcs_dt_mjd[:,1]).T
+my_intervals = []
+for masks in mask:
+	a = srcs_dt_mjd[masks.astype(np.bool)]
+	if len(a)!= 0:
+		print(a)
+		low = np.amin(a)
+		up = np.amax(a)
+		my_intervals.append([low,up])
+
+np.savetxt("plot_stash/data/time_intervals.txt",my_intervals, delimiter=",")	
+print(my_intervals)
+print(len(srcs_time))
+np.savetxt("plot_stash/data/src_times.txt",srcs_time, delimiter=",")
+
+
+
+
+
+
