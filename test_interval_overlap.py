@@ -83,6 +83,12 @@ def get_unique_intervals_v2(intervals):
 	interval_mids = (interval_bounds[1:] + interval_bounds[:-1]) / 2. 
 	return interval_mids
 
+def get_unique_interval_hits(intervals):
+	interval_bounds = intervals.reshape(len(intervals) * 2)
+	interval_bounds.sort(axis=0)
+	hit_intervals = np.vstack((interval_bounds[:-1],interval_bounds[1:])).T
+	return hit_intervals	
+
 times = [[0,3],[2,6],[5,9],[10,14],[12,16]]
 times2 = [[0,1],[0,3],[2,6],[5,9],[10,14],[12,16],[15,16],[14,16]]
 
@@ -136,7 +142,13 @@ print(my_intervals)
 print(len(srcs_time))
 np.savetxt("plot_stash/data/src_times.txt",srcs_time, delimiter=",")
 
+hits = get_unique_interval_hits(srcs_dt_mjd)
+print(hits)
+#hits = hits[
+mask2 = np.sum(mask,axis=1).astype(np.bool)
+print(hits[mask2])
 
+np.savetxt("plot_stash/data/time_interval_hits.txt", hits[mask2], delimiter=",")
 
 
 
