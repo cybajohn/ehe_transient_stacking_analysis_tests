@@ -69,7 +69,7 @@ for key in sample_names:
     # :: Signal injector ::
     # Use a power law flux with somewhat generic gamma=2. 'model' must be a
     # method from `tdepps.utils.phys`, 'args' are the method parameters.
-    gamma = 3.7
+    gamma = 3.
     E0 = 1.    # Reference energy in GeV
     phi0 = 1.  # This doesn't matter here, but set it anyway
     flux_model_opts = {
