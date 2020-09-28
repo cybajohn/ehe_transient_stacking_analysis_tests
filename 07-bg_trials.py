@@ -67,7 +67,7 @@ llhs = {}
 
 # Load files and build the models one after another to save memory
 sample_names = _loader.source_list_loader()
-sample_names = [sample_names[1],sample_names[2],sample_names[3]] # except 79
+sample_names = [sample_names[2]] # except 79
 source_type = "ehe" # "ehe" or "hese"
 
 all_srcs = []
