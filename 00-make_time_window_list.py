@@ -32,7 +32,7 @@ def sec2timestr(sec):
 #dt = np.vstack((-dt, dt)).T
 
 # +-1 to +-400 days
-dt = np.logspace(np.log10(1 * SECINDAY), np.log10(400 * SECINDAY), 20 + 1)
+dt = np.logspace(np.log10(1 * SECINDAY), np.log10(1600 * SECINDAY), 20 + 1)
 dt = np.vstack((-dt, dt)).T
 
 
