@@ -67,13 +67,16 @@ llhs = {}
 
 # Load files and build the models one after another to save memory
 sample_names = _loader.source_list_loader()
-sample_names = [sample_names[2]] # except 79
+sample_names = [sample_names[2]] # just 2012-2014
 source_type = "ehe" # "ehe" or "hese"
 
 all_srcs = []
 for key in sample_names:
         print(type(_loader.source_list_loader(key)[key]))
         all_srcs.extend(_loader.source_list_loader(key)[key])
+
+# just one source to have something to compare to skylab
+all_srcs = [all_srcs[5]]
 
 for key in sample_names:
     print("\n" + 80 * "#")
