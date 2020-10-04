@@ -29,7 +29,7 @@ print(srcs_time[2], srcs_time[6])
 print(srcs_time[6]-srcs_time[2])
 
 windows1 = np.linspace(10,100,15)
-windows2 = np.linspace(120,500,5)
+windows2 = np.linspace(120,500,6)
 windows = np.concatenate((windows1,windows2))
 
 print(windows*2)
