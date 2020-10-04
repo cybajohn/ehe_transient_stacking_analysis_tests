@@ -75,8 +75,9 @@ for key in sample_names:
         print(type(_loader.source_list_loader(key)[key]))
         all_srcs.extend(_loader.source_list_loader(key)[key])
 
-# just one source to have something to compare to skylab
-all_srcs = [all_srcs[5]]
+# just two sources to inspect overlapping area
+# used source [5] against skylab
+all_srcs = [all_srcs[2],all_srcs[6]]
 
 for key in sample_names:
     print("\n" + 80 * "#")
