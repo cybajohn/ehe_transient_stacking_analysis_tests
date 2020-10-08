@@ -31,14 +31,14 @@ def sec2timestr(sec):
 #dt = np.logspace(0, np.log10(2.5 * SECINDAY), 20 + 1)
 #dt = np.vstack((-dt, dt)).T
 
-# +-1 to +-400 days
-#dt = np.logspace(np.log10(1 * SECINDAY), np.log10(1600 * SECINDAY), 20 + 1)
+# +-1 to +-1600 days
+dt = np.logspace(np.log10(1 * SECINDAY), np.log10(1600 * SECINDAY), 20 + 1)
 
 # to inspect overlapping area
-windows1 = np.linspace(10,100,15)
-windows2 = np.linspace(120,500,6)
-windows = np.concatenate((windows1,windows2))
-dt = windows * SECINDAY
+#windows1 = np.linspace(10,100,15)
+#windows2 = np.linspace(120,500,6)
+#windows = np.concatenate((windows1,windows2))
+#dt = windows * SECINDAY
 
 dt = np.vstack((-dt, dt)).T
 
