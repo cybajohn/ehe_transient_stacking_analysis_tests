@@ -44,9 +44,9 @@ src_2 = all_srcs[6]["mjd"]
 when_overlap = (src_2 - src_1)/2.
 
 plt.plot(dt,non_zero_percent,"x")
-plt.axvline(when_overlap)
+#plt.axvline(when_overlap)
 plt.xlabel("window in days")
 plt.ylabel("non_zero trials in percent")
-plt.savefig("plot_stash/time/two_sources_trials_time.pdf")
+plt.savefig("plot_stash/time/one_source_trials_time.pdf")
 
 plt.clf()
