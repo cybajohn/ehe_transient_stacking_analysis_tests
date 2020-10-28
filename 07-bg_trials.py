@@ -77,7 +77,7 @@ for key in sample_names:
 
 # just two sources to inspect overlapping area
 # used source [5] against skylab
-#all_srcs = [all_srcs[2],all_srcs[6]]
+all_srcs = [all_srcs[5]]
 
 for key in sample_names:
     print("\n" + 80 * "#")
