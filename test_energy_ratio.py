@@ -59,7 +59,7 @@ dt1 = 400*dayinsec
 
 #load models one after another to save memory
 sample_names = _loader.source_list_loader()
-sample_names = sample_names[1:] # without IC79, IC86_2011
+sample_names = [sample_names[2]] # 2012-2014
 source_type = "ehe" # "ehe" or "hese"
 
 
@@ -100,14 +100,68 @@ for key in sample_names:
         h_sig, _, _ = np.histogram2d(sin_dec_sig, logE_sig, weights=w_sig,
                                      bins=[_bx, _by], normed=True)
 	
-	
+	print("make pdfs")	
         ratio = make_grid_interp_from_hist_ratio(
                 h_bg=h_bg, h_sig=h_sig, bins=[_bx, _by],
                 edge_fillval=energy_opts["edge_fillval"],
                 interp_col_log=energy_opts["interp_col_log"],
-                force_y_asc=energy_opts["force_logE_asc"]))
+                force_y_asc=energy_opts["force_logE_asc"])
         bg, sig = make_grid_interp_kintscher_style_second_attempt(
                 h_bg=h_bg, h_sig=h_sig, bins=[_bx, _by])
+	
+	print("calculate values")
+	
+	data = "data"
+	
+	
+	if data == "mc":
+		X=MC
+	ev_sin_dec = np.sin(X["dec"])
+	ev_logE = X["logE"]
+	
+	events = np.vstack((ev_sin_dec, ev_logE)).T
+	
+	ratio_ev = np.exp(ratio(events))
+	bg_ev = np.exp(bg(events))
+	sig_ev = np.exp(sig(events))
+
+	sig_nan_percent = 100. * len(sig_ev[np.isnan(sig_ev)])/len(sig_ev)
+	bg_nan_percent = 100. * len(bg_ev[np.isnan(bg_ev)])/len(bg_ev)
+	bg_zero_percent = 100. * len(bg_ev[~(bg_ev > 0)])/len(bg_ev)
+	
+	print("nan percentage sig: ",sig_nan_percent)
+	print("nan percentage bg: ",bg_nan_percent)
+	print("zero percentage bg: ",bg_zero_percent)
+	
+	my_ratio_ev = sig_ev/bg_ev
+	
+	nan_percent = 100. * len(my_ratio_ev[np.isnan(my_ratio_ev)])/len(my_ratio_ev)
+	
+	print("nan percentage ratio: ",nan_percent)
+	
+	my_ratio_ev = my_ratio_ev[~np.isnan(my_ratio_ev)]
+		
+	print("plotting")
+	
+	plt.hist(ratio_ev,bins=100,histtype="step",log=True,label="direct ratio")
+	plt.legend(loc="best")
+	plt.savefig("plot_stash/energy/direct_energy_ratio_data_hist.pdf")
+	plt.clf()
+	
+	plt.hist(my_ratio_ev,bins=100,histtype="step",log=True,label="ratio afterwards")
+	plt.legend(loc="best")
+	plt.savefig("plot_stash/energy/afterwards_energy_ratio_data_hist.pdf")
+	plt.clf()
+	
+	upper = np.amax(np.concatenate((my_ratio_ev,ratio_ev)))
+	bins = np.linspace(0,upper,101)
+	
+	plt.hist(my_ratio_ev,bins=bins,histtype="step",log=True,color="red",label="ratio afterwards")
+	plt.hist(ratio_ev,bins=bins,histtype="step",log=True,color="blue",label="direct ratio")
+	plt.legend(loc="best")
+	plt.savefig("plot_stash/energy/both_energy_ratio_data_hist.pdf")
+	plt.clf()
+
 
 
 
