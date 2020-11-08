@@ -95,7 +95,7 @@ for key in sample_names:
         w_sig = MC["ow"] * energy_opts["flux_model"](MC["trueE"])
 
         _bx, _by = energy_opts["bins"]
-        h_bg, _, _ = np.histogram2d(sin_dec_bg, logE_bg, weights=w_bg,
+        h_bg, _x_edge, _y_edge = np.histogram2d(sin_dec_bg, logE_bg, weights=w_bg,
                                     bins=[_bx, _by], normed=True)
         h_sig, _, _ = np.histogram2d(sin_dec_sig, logE_sig, weights=w_sig,
                                      bins=[_bx, _by], normed=True)
@@ -108,6 +108,19 @@ for key in sample_names:
                 force_y_asc=energy_opts["force_logE_asc"])
         bg, sig = make_grid_interp_kintscher_style_second_attempt(
                 h_bg=h_bg, h_sig=h_sig, bins=[_bx, _by])
+	
+	x_list = np.linspace(_bx[0],_bx[-1],40)
+	y_list = np.linspace(_by[0],_by[-1],40)
+	my_ratio_list = np.zeros(shape=(40,40))
+	ratio_list = np.zeros(shape=(40,40))
+	for i,_x in enumerate(x_list):
+		for j,_y in enumerate(y_list):
+			my_ratio_list[i][j] = 1. * np.exp(sig([_x,_y]))/np.exp(bg([_x,_y]))
+			ratio_list[i][j] = np.exp(ratio([_x,_y]))
+	np.savetxt("plot_stash/data/energy_ratio_bins_x.txt",_x_edge,delimiter=",")
+	np.savetxt("plot_stash/data/energy_ratio_bins_y.txt",_y_edge,delimiter=",")
+	np.savetxt("plot_stash/data/my_energy_spline_ratio.txt",my_ratio_list,delimiter=",")
+	np.savetxt("plot_stash/data/energy_spline_ratio.txt",ratio_list,delimiter=",")
 	
 	print("calculate values")
 	
