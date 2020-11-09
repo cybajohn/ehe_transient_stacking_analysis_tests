@@ -101,13 +101,20 @@ for key in sample_names:
                                      bins=[_bx, _by], normed=True)
 	
 	print("make pdfs")	
-        ratio = make_grid_interp_from_hist_ratio(
+        ratio, ratio_info = make_grid_interp_from_hist_ratio(
                 h_bg=h_bg, h_sig=h_sig, bins=[_bx, _by],
                 edge_fillval=energy_opts["edge_fillval"],
                 interp_col_log=energy_opts["interp_col_log"],
-                force_y_asc=energy_opts["force_logE_asc"])
-        bg, sig = make_grid_interp_kintscher_style_second_attempt(
-                h_bg=h_bg, h_sig=h_sig, bins=[_bx, _by])
+                force_y_asc=energy_opts["force_logE_asc"],
+		give_info=True)
+	
+	ratio_hist = ratio_info["sob_hist"]
+	
+        bg, sig, my_info = make_grid_interp_kintscher_style_second_attempt(
+                h_bg=h_bg, h_sig=h_sig, bins=[_bx, _by], give_info=True, give_hists=True)
+	
+	my_signal_hist = my_info["signal_hist"]
+	my_background_hist = my_info["background_hist"]
 	
 	x_list = np.linspace(_bx[0],_bx[-1],40)
 	y_list = np.linspace(_by[0],_by[-1],40)
@@ -121,7 +128,11 @@ for key in sample_names:
 	np.savetxt("plot_stash/data/energy_ratio_bins_y.txt",_y_edge,delimiter=",")
 	np.savetxt("plot_stash/data/my_energy_spline_ratio.txt",my_ratio_list,delimiter=",")
 	np.savetxt("plot_stash/data/energy_spline_ratio.txt",ratio_list,delimiter=",")
+	np.savetxt("plot_stash/data/my_energy_signal_hist.txt",my_signal_hist,delimiter=",")
+	np.savetxt("plot_stash/data/my_energy_background_hist.txt",my_background_hist,delimiter=",")
+	np.savetxt("plot_stash/data/energy_ratio_hist.txt",ratio_hist,delimiter=",")
 	
+		
 	print("calculate values")
 	
 	data = "data"
