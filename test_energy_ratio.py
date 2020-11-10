@@ -111,7 +111,7 @@ for key in sample_names:
 	ratio_hist = ratio_info["sob_hist"]
 	
         bg, sig, my_info = make_grid_interp_kintscher_style_second_attempt(
-                h_bg=h_bg, h_sig=h_sig, bins=[_bx, _by], give_info=True, give_hists=True)
+                h_bg=h_bg, h_sig=h_sig, bins=[_bx, _by], fill_all=True, give_info=True, give_hists=True)
 	
 	my_signal_hist = my_info["signal_hist"]
 	my_background_hist = my_info["background_hist"]
