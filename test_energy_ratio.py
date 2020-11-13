@@ -26,7 +26,7 @@ from tdepps.utils import make_time_dep_dec_splines
 from tdepps.utils import make_grid_interp_kintscher_style_second_attempt
 from tdepps.utils import make_grid_interp_from_hist_ratio
 
-
+import histlite as hl
 from matplotlib import pyplot as plt
 
 def flux_model_factory(model, **model_args):
@@ -100,6 +100,20 @@ for key in sample_names:
         h_sig, _, _ = np.histogram2d(sin_dec_sig, logE_sig, weights=w_sig,
                                      bins=[_bx, _by], normed=True)
 	
+	histlite_sig = hl.hist((sin_dec_sig, logE_sig), weights=w_sig, bins=[_bx, _by]).normalize()
+	histlite_bg = hl.hist((sin_dec_bg, logE_bg), weights=w_bg, bins=[_bx, _by]).normalize()	
+	
+	kde_sig = hl.kde((sin_dec_sig, logE_sig), weights=w_sig, range=histlite_sig.range, kernel=.03)
+	kde_bg = hl.kde((sin_dec_bg, logE_bg), weights=w_bg, range=histlite_bg.range, kernel=.03)
+		
+	hl.plot2d(kde_sig, cbar=True)
+	plt.savefig("plot_stash/energy/sig_kde.pdf")
+	plt.clf()
+	
+	hl.plot2d(kde_bg, cbar=True)
+	plt.savefig("plot_stash/energy/bg_kde.pdf")
+	plt.clf()
+		
 	print("make pdfs")	
         ratio, ratio_info = make_grid_interp_from_hist_ratio(
                 h_bg=h_bg, h_sig=h_sig, bins=[_bx, _by],
