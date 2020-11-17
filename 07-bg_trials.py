@@ -89,7 +89,7 @@ for key in sample_names:
     mc = _loader.mc_loader(source_type=source_type,names=key)[key]
     # outcomment for original all_srcs
     all_srcs = _loader.source_list_loader(key)[key]
-    all_srcs = [all_srcs[5]]
+    #all_srcs = [all_srcs[5]]
     runlist = _loader.runlist_loader(key)[key]
     # Process to tdepps format
     srcs_rec = phys.make_src_records_from_all_srcs(all_srcs, dt0=dt0,
