@@ -48,7 +48,7 @@ def flux_model_factory(model, **model_args):
         return flux_mod(trueE, **model_args)
     return flux_model
 	
-def give_sample(n_events, time):
+def give_sample(n_events, time=10.):
 	sam = {"ra": [], "dec": [], "time" : [], "logE": [], "sigma": []}
 	sam_dec = np.linspace(0. ,2. * np.pi, n_events)
 	sam_dec = np.resize(sam_dec, n_events**2)
@@ -64,14 +64,24 @@ def give_sample(n_events, time):
 	sam["sigma"] = sam_sigma
 	sam["time"] = sam_time
 	return sam
+
+def give_srcs(times=[10.], length=5. ,nsrcs=1):
+	dtype = [("ra", float), ("dec", float), ("time", float),
+        	("dt0", float), ("dt1", float), ("w_theo", float),
+        	("dt0_origin", float), ("dt1_origin", float)]
+	srcs_rec = np.empty((nsrcs,), dtype=dtype)
+	for i in range(nsrcs):
+		srcs_rec["time"][i] = times[i]
+        	srcs_rec["dec"][i] = np.pi
+        	srcs_rec["ra"][i] = np.pi
+        	srcs_rec["dt0"][i] = -length
+        	srcs_rec["dt1"][i] = length
+        	srcs_rec["dt0_origin"][i] = -length
+        	srcs_rec["dt1_origin"][i] = length
+	return srcs_rec
 	
-# lets play
-dayinsec = 60.*60.*24.
-dt0 = -400*dayinsec
-dt1 = 400*dayinsec
 
-
-print(give_sample(10, 10))
+print(give_sample(n_events=10, time=10.))
 
 
 #load models one after another to save memory
@@ -96,15 +106,16 @@ for key in sample_names:
         fmod = opts["model_energy_opts"].pop("flux_model")
         flux_model = flux_model_factory(fmod["model"], **fmod["args"])
         opts["model_energy_opts"]["flux_model"] = flux_model
-        all_srcs = _loader.source_list_loader(key)[key]
-        all_srcs = [all_srcs[5]]
         runlist = _loader.runlist_loader(key)[key]
-        # Process to tdepps format
-        srcs_rec = phys.make_src_records_from_all_srcs(all_srcs, dt0=dt0,
-                                                    dt1=dt1, X=X)
-	
-	
-        # Setup LLHs
+        
+	# give toy data
+	sam_start = np.amin(X["time"])
+	sam_end = np.amax(X["time"])
+	sam_mid = 1./2. * (sam_start + sam_end)
+	srcs_rec = give_srcs(times=[sam_mid])
+	sample = give_sample(n_events=10, time=sam_mid)
+        
+	# Setup LLHs
         llhmod1 = GRBModel(#X=exp_off, MC=mc, srcs=srcs_rec, run_list=runlist,
                       spatial_opts=opts["model_spatial_opts"],
                       energy_opts=opts["model_energy_opts"],
@@ -122,6 +133,19 @@ for key in sample_names:
 	
 	
         #llhs[key] = GRBLLH(llh_model=llhmod, llh_opts=opts["llh_opts"])
+	print(sample)
+	values2 = (llhmod2._soverb_time(sample["time"]) *
+                llhmod2._soverb_spatial(sample["ra"], np.sin(sample["dec"]), sample["sigma"]))
+	values1_sig = (llhmod1._sig_bg_time(sample["time"]) *
+                llhmod1._sig_spatial(sample["ra"],np.sin(sample["dec"]), sample["sigma"]))
+	
+	values1_bg = (llhmod1._sig_bg_time(sample["time"]) *
+                llhmod1._bg_spatial(np.sin(sample["dec"])))
+	
+	values1 = values1_sig/values1_bg
+	
+	print(values2)
+	print(values1)
 	
         del exp_off
         del exp_on
