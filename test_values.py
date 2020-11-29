@@ -48,7 +48,7 @@ def flux_model_factory(model, **model_args):
         return flux_mod(trueE, **model_args)
     return flux_model
 	
-def give_sample(n_events, time=10.):
+def give_sample(n_events, sigma, time=10.):
 	sam = {"ra": [], "dec": [], "time" : [], "logE": [], "sigma": []}
 	sam_dec = np.linspace(0. ,2. * np.pi, n_events)
 	sam_dec = np.resize(sam_dec, n_events**2)
@@ -57,7 +57,7 @@ def give_sample(n_events, time=10.):
 	sam_time = np.ones(n_events**2) * time
 	sam_logE = np.linspace(1. ,9. , n_events)
 	sam_logE = np.repeat(sam_logE, n_events)
-	sam_sigma = np.zeros(n_events**2)
+	sam_sigma = np.ones(n_events**2) * sigma
 	sam["ra"] = sam_ra
 	sam["dec"] = sam_dec
 	sam["logE"] = sam_logE
@@ -81,7 +81,6 @@ def give_srcs(times=[10.], length=5. ,nsrcs=1):
 	return srcs_rec
 	
 
-print(give_sample(n_events=10, time=10.))
 
 
 #load models one after another to save memory
@@ -113,7 +112,8 @@ for key in sample_names:
 	sam_end = np.amax(X["time"])
 	sam_mid = 1./2. * (sam_start + sam_end)
 	srcs_rec = give_srcs(times=[sam_mid])
-	sample = give_sample(n_events=10, time=sam_mid)
+	sigma_x = np.amax(X["sigma"])
+	sample = give_sample(n_events=10, sigma=sigma_x, time=sam_mid)
         
 	# Setup LLHs
         llhmod1 = GRBModel(#X=exp_off, MC=mc, srcs=srcs_rec, run_list=runlist,
@@ -122,6 +122,15 @@ for key in sample_names:
                       time_opts = opts["model_time_opts"])
         llhmod1.fit(X=X, MC=mc, srcs=srcs_rec, run_list=runlist)
 	
+	values1_sig = (llhmod1._sig_bg_time(sample["time"]) *
+                llhmod1._sig_spatial(sample["ra"],np.sin(sample["dec"]), sample["sigma"]))
+
+        values1_bg = (llhmod1._sig_bg_time(sample["time"]) *
+                llhmod1._bg_spatial(np.sin(sample["dec"])))
+
+        values1 = values1_sig/values1_bg
+
+		
 	opts["model_time_opts"]["window_opt"] = "non_overlapping"
 	
 	llhmod2 = GRBModel(#X=exp_off, MC=mc, srcs=srcs_rec, run_list=runlist,
@@ -130,28 +139,28 @@ for key in sample_names:
                       time_opts = opts["model_time_opts"])
         llhmod2.fit(X=X, MC=mc, srcs=srcs_rec, run_list=runlist)
 	
-	
+	values2 = (llhmod2._soverb_time(sample["time"]) *
+                llhmod2._soverb_spatial(sample["ra"], np.sin(sample["dec"]), sample["sigma"]))	
 	
         #llhs[key] = GRBLLH(llh_model=llhmod, llh_opts=opts["llh_opts"])
 	print(sample)
-	values2 = (llhmod2._soverb_time(sample["time"]) *
-                llhmod2._soverb_spatial(sample["ra"], np.sin(sample["dec"]), sample["sigma"]))
-	values1_sig = (llhmod1._sig_bg_time(sample["time"]) *
-                llhmod1._sig_spatial(sample["ra"],np.sin(sample["dec"]), sample["sigma"]))
+	print(X["sigma"])
 	
-	values1_bg = (llhmod1._sig_bg_time(sample["time"]) *
-                llhmod1._bg_spatial(np.sin(sample["dec"])))
 	
-	values1 = values1_sig/values1_bg
-	
-	print(values2)
 	print(values1)
+	print(values2)
 	
+	if np.array_equal(values1,values2):
+		print("all values are equal (and shape)")
+	else:
+		print("not equal :( (or shape)")
+		
         del exp_off
         del exp_on
 	del X
         del mc
         gc.collect()
+
 
 print("fin")
 
