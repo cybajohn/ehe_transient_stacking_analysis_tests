@@ -89,6 +89,9 @@ sample_names = [sample_names[2]] # 2012-2014
 source_type = "ehe" # "ehe" or "hese"
 
 
+llhs1 = {}
+llhs2 = {}
+
 for key in sample_names:
         print("\n" + 80 * "#")
         print("# :: Setup for sample {} ::".format(key))
@@ -123,13 +126,22 @@ for key in sample_names:
         llhmod1.fit(X=X, MC=mc, srcs=srcs_rec, run_list=runlist)
 	
 	values1_sig = (llhmod1._sig_bg_time(sample["time"]) *
-                llhmod1._sig_spatial(sample["ra"],np.sin(sample["dec"]), sample["sigma"]))
+                llhmod1._sig_spatial(sample["ra"],np.sin(sample["dec"]), sample["sigma"]) *
+		llhmod1._sig_energy(np.sin(sample["dec"]), sample["logE"]))
 
         values1_bg = (llhmod1._sig_bg_time(sample["time"]) *
-                llhmod1._bg_spatial(np.sin(sample["dec"])))
+                llhmod1._bg_spatial(np.sin(sample["dec"])) *
+		llhmod1._bg_energy(np.sin(sample["dec"]), sample["logE"]))
 
         values1 = values1_sig/values1_bg
 
+	values1_2 = llhmod1.get_signal_pdf_vals(sample)/llhmod1.get_bg_pdf_vals(sample)
+	
+	llh1 = GRBLLH(llh_model=llhmod1, llh_opts=opts["llh_opts"])
+	
+	llhs1[key] = llh1
+	
+	values1_3 = llh1._general_soverb(sample)	
 		
 	opts["model_time_opts"]["window_opt"] = "non_overlapping"
 	
@@ -140,26 +152,70 @@ for key in sample_names:
         llhmod2.fit(X=X, MC=mc, srcs=srcs_rec, run_list=runlist)
 	
 	values2 = (llhmod2._soverb_time(sample["time"]) *
-                llhmod2._soverb_spatial(sample["ra"], np.sin(sample["dec"]), sample["sigma"]))	
+                llhmod2._soverb_spatial(sample["ra"], np.sin(sample["dec"]), sample["sigma"]) *
+		llhmod2._soverb_energy(np.sin(sample["dec"]), sample["logE"]))
 	
-        #llhs[key] = GRBLLH(llh_model=llhmod, llh_opts=opts["llh_opts"])
+	values2_2 = llhmod2.get_soverb(sample)
+	
+        llh2 = GRBLLH(llh_model=llhmod2, llh_opts=opts["llh_opts"])
+	
+	llhs2[key] = llh2
+	
+	values2_3 = llh2._soverb(sample, band_select=False, sob_ratio_cut=False)
+	
 	print(sample)
 	print(X["sigma"])
-	
+		
 	
 	print(values1)
 	print(values2)
 	
 	if np.array_equal(values1,values2):
-		print("all values are equal (and shape)")
+		print("all values1 and values2 are equal (and shape)")
 	else:
-		print("not equal :( (or shape)")
-		
-        del exp_off
+		print("not equal (val1 and val2) :( (or shape)")
+		mask = (values1 == values2)
+		print(mask)
+		print(values1[mask])
+		print(values2[mask])
+		print("all close tho? ",np.allclose(values1,values2,atol=1e-20))	
+	if np.array_equal(values1,values1_2):
+		print("all values1 and values1_2 are equal (and shape)")
+	else:
+		print("not equal (val1 and val1_2 or shape)")
+	
+	if np.array_equal(values1_2,values2_2):
+		print("all values1_2 and values2_2 are equal (and shape)")
+	else:
+		print("not equal (val1_2 and val2_2 or shape)")	
+		print("all close tho? ",np.allclose(values1_2,values2_2,atol=1e-20))	
+        
+	if np.array_equal(values1_3,values2_3):
+                print("all values1_3 and values2_3 are equal (and shape)")
+        else:
+                print("not equal (val1_3 and val2_3 or shape)")
+		print(values1_3.shape)
+		print(values2_3.shape)
+		print(values1_3)
+		print(values2_3)
+                print("all close tho? ",np.allclose(values1_3,values2_3,atol=1e-20))
+
+	del exp_off
         del exp_on
 	del X
         del mc
         gc.collect()
+
+multi_llh_opts = _loader.settings_loader("multi_llh")["multi_llh"]
+multi_llh1 = MultiGRBLLH(llh_opts=multi_llh_opts)
+multi_llh1.fit(llhs=llhs1)
+
+multi_llh2 = MultiGRBLLH(llh_opts=multi_llh_opts)
+multi_llh2.fit(llhs=llhs2)
+print("sample weights:")
+print(multi_llh1._ns_weights)
+print(multi_llh2._ns_weights)
+
 
 
 print("fin")
