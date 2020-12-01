@@ -216,6 +216,11 @@ print("sample weights:")
 print(multi_llh1._ns_weights)
 print(multi_llh2._ns_weights)
 
+ns_1, ts_1 = multi_llh1.fit_lnllh_ratio(ns0=1.,X={sample_names[0]: sample})
+print("multi_llh1: ns,ts: ",ns_1,ts_1)
+
+ns_2, ts_2 = multi_llh2.fit_lnllh_ratio(ns0=1.,X={sample_names[0]: sample})
+print("multi_llh2: ns,ts: ",ns_2,ts_2)
 
 
 print("fin")
