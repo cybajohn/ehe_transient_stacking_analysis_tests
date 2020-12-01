@@ -115,7 +115,7 @@ for key in sample_names:
     # "overlapping" for the new model
     # Todo: Maybe add time dependent scenarios 
     model_time_opts = {
-	"window_opt": "non_overlapping"
+	"window_opt": "overlapping"
 	}
 
     # :: LLH ::
