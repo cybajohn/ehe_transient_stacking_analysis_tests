@@ -61,7 +61,7 @@ def make_bg_pdf_scan_plots(fname, emp_dist, thresh_vals, pvals, scales,
     axl.axvline(emp_dist.thresh, 0, 1, ls=":", color="C3")
     axl.set_yscale("log", nonposy="clip")
     axl.set_xlabel("ts")
-    axl.set_title("Test Statitics")
+    axl.set_title("Test Statistics")
     axl.legend()
 
     # ## Center: Plot the selected combined p-values ##

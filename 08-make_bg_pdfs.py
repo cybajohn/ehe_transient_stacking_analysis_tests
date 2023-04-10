@@ -34,7 +34,7 @@ if not os.path.isdir(plotpath):
 files = sorted(glob(inpath))
 print(files)
 print(files[-1])
-files = [files[-1]]
+#files = [files[-1]]
 for fpath in files:
     fname = os.path.basename(fpath)
     print("Making PDF from BG trial file: {}".format(fname))

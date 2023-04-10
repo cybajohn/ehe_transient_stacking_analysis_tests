@@ -50,7 +50,7 @@ def flux_model_factory(model, **model_args):
 	
 def give_sample(n_events, sigma, time=10.):
 	sam = {"ra": [], "dec": [], "time" : [], "logE": [], "sigma": []}
-	sam_dec = np.linspace(0. ,2. * np.pi, n_events)
+	sam_dec = np.arcsin(np.linspace(-1. , 1., n_events))
 	sam_dec = np.resize(sam_dec, n_events**2)
 	sam_ra = np.linspace(0. ,2. * np.pi, n_events)
 	sam_ra = np.repeat(sam_ra,n_events)
@@ -65,7 +65,8 @@ def give_sample(n_events, sigma, time=10.):
 	sam["time"] = sam_time
 	return sam
 
-def give_srcs(times=[10.], length=5. ,nsrcs=1):
+def give_srcs(times=[10.], length=5.):
+	nsrcs = len(times)
 	dtype = [("ra", float), ("dec", float), ("time", float),
         	("dt0", float), ("dt1", float), ("w_theo", float),
         	("dt0_origin", float), ("dt1_origin", float)]
@@ -80,8 +81,12 @@ def give_srcs(times=[10.], length=5. ,nsrcs=1):
         	srcs_rec["dt1_origin"][i] = length
 	return srcs_rec
 	
-
-
+def concatenate_samples(samples):
+	new_sam = samples[0]
+	for sam in samples[1:]:
+		for key in sam.keys():
+			new_sam[key] = np.concatenate((new_sam[key], sam[key]))
+	return new_sam
 
 #load models one after another to save memory
 sample_names = _loader.source_list_loader()
@@ -116,8 +121,16 @@ for key in sample_names:
 	sam_mid = 1./2. * (sam_start + sam_end)
 	srcs_rec = give_srcs(times=[sam_mid])
 	sigma_x = np.amax(X["sigma"])
+	
 	sample = give_sample(n_events=10, sigma=sigma_x, time=sam_mid)
-        
+        sample_2 = give_sample(n_events=10, sigma=sigma_x, time=(sam_mid+30.))
+	srcs_rec2 = give_srcs(times=[sam_mid,sam_mid+30.])
+	srcs_rec3 = give_srcs(times=[sam_mid, sam_mid+30., sam_mid+10., sam_mid+20., sam_mid+30., sam_mid+40.])
+	sample2 = concatenate_samples([sample,sample])
+
+	#for 2 srcs
+	srcs_rec = srcs_rec3
+		
 	# Setup LLHs
         llhmod1 = GRBModel(#X=exp_off, MC=mc, srcs=srcs_rec, run_list=runlist,
                       spatial_opts=opts["model_spatial_opts"],
@@ -163,12 +176,10 @@ for key in sample_names:
 	
 	values2_3 = llh2._soverb(sample, band_select=False, sob_ratio_cut=False)
 	
-	print(sample)
-	print(X["sigma"])
-		
+	print("sample: ",sample)
 	
-	print(values1)
-	print(values2)
+	print("values1: ",values1)
+	print("values2: ",values2)
 	
 	if np.array_equal(values1,values2):
 		print("all values1 and values2 are equal (and shape)")

@@ -39,6 +39,7 @@ my_mc_no_ehe = load_mc_data(names, test_path + "my_mc_no_ehe")
 mc_no_ehe_alert = load_mc_data(names, test_path + "mc_no_ehe_alert")
 mc_unfiltered = load_mc_data(names, test_path + "mc_unfiltered")
 mc_ehe_alert = load_mc_data(names, test_path + "mc_ehe_alert")
+mc_no_ehe_high_q = load_mc_data(names, test_path + "mc_no_ehe_high_q")
 source_pos = load_sources(source_path)
 source_pos = {i:source_pos[i] for i in source_pos if i!="IC79"}
 #source_pos = {list(source_pos.keys())[1]:list(source_pos.values())[1]} # just 2012-2014
@@ -46,6 +47,7 @@ source_pos = {i:source_pos[i] for i in source_pos if i!="IC79"}
 source_pos = give_source_dec(source_pos)
 print("plotting")
 plot_weighted_hist_mc_no_ehe(mc_no_ehe, source_pos, bins=100, mc_unfiltered = mc_unfiltered, my_mc_no_ehe = my_mc_no_ehe, mc_no_ehe_alert = mc_no_ehe_alert, log = True, path="plot_stash")
+plot_weighted_hist_mc_no_ehe(mc_no_ehe, source_pos, bins=100, mc_unfiltered = mc_unfiltered, my_mc_no_ehe = mc_no_ehe_high_q, mc_no_ehe_alert = mc_no_ehe_alert, log = True, path="plot_stash", name = "_high_q")
 plot_weighted_hist_mc_no_ehe(mc_no_ehe_alert, source_pos, bins = -1, min_bin = 500, path="plot_stash", name = "_no_alerts")
 plot_weights(mc_no_ehe_alert, source_pos, path= "plot_stash")
 #plot_energy_dec_hist(mc_unfiltered[names[0]], mc_ehe_alert[names[0]], bins = 50, title = names[0], path="plot_stash", name ="_"+names[0])

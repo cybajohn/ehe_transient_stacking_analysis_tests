@@ -1,6 +1,7 @@
 import numpy as np
 import _loader
 from tdepps.backend import bg_time_box
+from tdepps.utils import get_unique_intervals as guint
 import matplotlib.pyplot as plt
 
 sample_names = _loader.source_list_loader()
@@ -150,6 +151,8 @@ print(hits[mask2])
 
 np.savetxt("plot_stash/data/time_interval_hits.txt", hits[mask2], delimiter=",")
 
-
+into, hitto = guint(srcs_dt_mjd)
+print("new: ",hitto)
+print("manual: ",hits[mask2])
 
 
